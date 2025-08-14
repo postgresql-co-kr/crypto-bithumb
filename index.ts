@@ -75,13 +75,14 @@ function redrawTable(): void {
     head: [
       chalk.blue("코인"),
       chalk.blue("현재가"),
+      chalk.blue("체결강도"), // volumePower
       chalk.blue("고가(24H)"), // High Price
       chalk.blue("저가(24H)"), // Low Price
       chalk.blue("변동금액(24H)"),
       chalk.blue("변동률(24H)"),
       chalk.blue("수익률"), // Profit/Loss Rate
     ],
-    colWidths: [15, 15, 15, 15, 18, 15, 15], // Added width for 수익률
+    colWidths: [15, 15, 10, 15, 15, 18, 15, 15], // Added width for 체결강도
   });
 
   // 저장된 실시간 데이터로 테이블 채우기
@@ -152,7 +153,8 @@ function redrawTable(): void {
 
     table.push([
       chalk.yellow(`${icon} ${symbol}`),
-      priceColor(`${price} KRW`), // Apply color to price
+      priceColor(`${price} KRW`),
+      parseFloat(data.volumePower).toFixed(2),
       parseFloat(data.highPrice).toLocaleString("ko-KR"), // High Price
       parseFloat(data.lowPrice).toLocaleString("ko-KR"), // Low Price
       rateColor(`${changeAmount.toLocaleString("ko-KR")} KRW`),
