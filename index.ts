@@ -5,7 +5,7 @@ import * as fs from "fs";
 
 // 커맨드 라인 인수 처리
 const args = process.argv.slice(2);
-let sortBy = 'name'; // 기본 정렬: 이름
+let sortBy = 'rate'; // 기본 정렬: 변동률
 const sortByArgIndex = args.indexOf('--sort-by');
 if (sortByArgIndex > -1 && args[sortByArgIndex + 1]) {
     const sortArg = args[sortByArgIndex + 1];
@@ -13,7 +13,7 @@ if (sortByArgIndex > -1 && args[sortByArgIndex + 1]) {
     if (['name', 'rate'].includes(sortArg)) {
         sortBy = sortArg;
     } else {
-        console.log(chalk.yellow(`Warning: Invalid sort option '${sortArg}'. Defaulting to 'name'.`));
+        console.log(chalk.yellow(`Warning: Invalid sort option '${sortArg}'. Defaulting to 'rate'.`));
     }
 }
 
@@ -81,34 +81,36 @@ const wsUri: string = "wss://pubwss.bithumb.com/pub/ws";
 
 // 실시간 시세 데이터를 저장할 객체
 const realTimeData: RealTimeData = {};
+let redrawTimeout: NodeJS.Timeout | null = null;
 
 // 콘솔을 지우고 테이블을 다시 그리는 함수
 function redrawTable(): void {
   // 테이블 생성
   const table = new Table({
     head: [
-      chalk.blue("코인"),
-      chalk.blue("현재가"),
-      chalk.blue("체결강도"), // volumePower
-      chalk.blue("수익률"), // Profit/Loss Rate
-      chalk.blue("변동률(24H)"),
-      chalk.blue("변동금액(24H)"),
-      chalk.blue("고가(24H)"), // High Price
-      chalk.blue("저가(24H)"), // Low Price
+      chalk.magentaBright("코인"),
+      chalk.magentaBright("현재가"),
+      chalk.magentaBright("체결강도"), // volumePower
+      chalk.magentaBright("수익률"), // Profit/Loss Rate
+      chalk.magentaBright("변동률(24H)"),
+      chalk.magentaBright("변동금액(24H)"),
+      chalk.magentaBright("고가(24H)"), // High Price
+      chalk.magentaBright("저가(24H)"), // Low Price
     ],
     colWidths: [15, 15, 10, 15, 15, 18, 15, 15], // Added width for 체결강도
   });
 
   // 저장된 실시간 데이터로 테이블 채우기
-  // --sort-by 인수에 따라 정렬. 기본은 이름순.
+  // --sort-by 인수에 따라 정렬. 기본은 변동률순.
   const sortedSymbols: string[] = Object.keys(realTimeData).sort(
     (a: string, b: string) => {
-      if (sortBy === "rate") {
-        const rateA: number = parseFloat(realTimeData[a].chgRate);
-        const rateB: number = parseFloat(realTimeData[b].chgRate);
-        return rateB - rateA; // 변동률 기준 내림차순
+      if (sortBy === "name") {
+        return a.localeCompare(b); // 이름순
       }
-      return a.localeCompare(b); // 이름순 (기본)
+      // 기본 정렬: 변동률 기준 내림차순
+      const rateA: number = parseFloat(realTimeData[a].chgRate);
+      const rateB: number = parseFloat(realTimeData[b].chgRate);
+      return rateB - rateA;
     }
   );
 
@@ -231,8 +233,8 @@ function redrawTable(): void {
     sentimentColor = chalk.gray;
   }
 
-  // 콘솔 지우고 테이블 출력
-  console.clear();
+  // 콘솔 지우고 테이블 출력 (깜빡임 방지)
+  process.stdout.write('\x1B[2J\x1B[H');
   console.log(chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit)"));
   console.log(sentimentColor(marketSentiment)); // Display market sentiment
   console.log(table.toString());
@@ -271,7 +273,14 @@ function connect(): void {
 
       // 실시간 데이터 업데이트
       realTimeData[content.symbol] = content;
-      redrawTable();
+      
+      // 깜빡임 감소를 위해 redrawTable 호출을 디바운스합니다.
+      if (!redrawTimeout) {
+        redrawTimeout = setTimeout(() => {
+          redrawTable();
+          redrawTimeout = null;
+        }, 80); // 80ms 간격으로 다시 그립니다.
+      }
     }
   });
 
