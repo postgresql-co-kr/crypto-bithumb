@@ -75,12 +75,12 @@ function redrawTable(): void {
     head: [
       chalk.blue("코인"),
       chalk.blue("현재가"),
+      chalk.blue("수익률"), // Profit/Loss Rate
       chalk.blue("체결강도"), // volumePower
       chalk.blue("고가(24H)"), // High Price
       chalk.blue("저가(24H)"), // Low Price
       chalk.blue("변동금액(24H)"),
       chalk.blue("변동률(24H)"),
-      chalk.blue("수익률"), // Profit/Loss Rate
     ],
     colWidths: [15, 15, 10, 15, 15, 18, 15, 15], // Added width for 체결강도
   });
@@ -154,12 +154,12 @@ function redrawTable(): void {
     table.push([
       chalk.yellow(`${icon} ${symbol}`),
       priceColor(`${price} KRW`),
+      profitLossColor(profitLossRate), // Profit/Loss Rate
       parseFloat(data.volumePower).toFixed(2),
       parseFloat(data.highPrice).toLocaleString("ko-KR"), // High Price
       parseFloat(data.lowPrice).toLocaleString("ko-KR"), // Low Price
       rateColor(`${changeAmount.toLocaleString("ko-KR")} KRW`),
       rateColor(`${changeRate.toFixed(2)}%`),
-      profitLossColor(profitLossRate), // Profit/Loss Rate
     ]);
   }
 

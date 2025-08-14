@@ -6,6 +6,11 @@
       "averagePurchasePrice": 0
     },
     {
+      "symbol": "USDT_KRW",
+      "icon": "$",
+      "averagePurchasePrice": 0
+    },
+    {
       "symbol": "ETH_KRW",
       "icon": "Ξ",
       "averagePurchasePrice": 0
