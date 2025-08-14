@@ -1,6 +1,22 @@
 import WebSocket from "ws";
 import chalk from "chalk";
 import Table from "cli-table3";
+import * as fs from "fs";
+
+// Interface for coin configuration from config.json
+interface CoinConfig {
+  symbol: string;
+  icon: string;
+  averagePurchasePrice: number;
+}
+
+// Interface for the overall application configuration
+interface AppConfig {
+  coins: CoinConfig[];
+}
+
+// Define icon map
+let iconMap: Record<string, string> = {};
 
 // Interface for the content received from Bithumb WebSocket
 interface TickerContent {
@@ -28,23 +44,26 @@ interface RealTimeData {
   [key: string]: TickerContent;
 }
 
-// Bithumb WebSocket URL
-const wsUri: string = "wss://pubwss.bithumb.com/pub/ws";
+let appConfig: AppConfig;
+try {
+  const configPath = "./config.json";
+  const configContent = fs.readFileSync(configPath, "utf8");
+  appConfig = JSON.parse(configContent);
+} catch (error) {
+  console.error(chalk.red("Error loading config.json:"), error);
+  process.exit(1); // Exit if config cannot be loaded
+}
+
+// Populate iconMap after appConfig is loaded
+appConfig.coins.forEach((coin) => {
+  iconMap[coin.symbol] = coin.icon;
+});
 
 // 구독할 코인 목록 (예: BTC, ETH, XRP)
-const symbols: string[] = [
-  "BTC_KRW",
-  "ETH_KRW",
-  "XRP_KRW",
-  "DOGE_KRW",
-  "STRK_KRW",
-  "BONK_KRW",
-  "TRUMP_KRW",
-  "PENGU_KRW",
-  "SOL_KRW",
-  "ADA_KRW",
-  "PEPE_KRW",
-];
+const symbols: string[] = appConfig.coins.map((coin) => coin.symbol);
+
+// Bithumb WebSocket URL
+const wsUri: string = "wss://pubwss.bithumb.com/pub/ws";
 
 // 실시간 시세 데이터를 저장할 객체
 const realTimeData: RealTimeData = {};
@@ -60,24 +79,10 @@ function redrawTable(): void {
       chalk.blue("저가(24H)"), // Low Price
       chalk.blue("변동금액(24H)"),
       chalk.blue("변동률(24H)"),
+      chalk.blue("수익률"), // Profit/Loss Rate
     ],
-    colWidths: [15, 15, 15, 15, 18, 15],
+    colWidths: [15, 15, 15, 15, 18, 15, 15], // Added width for 수익률
   });
-
-  // Define icon map
-  const iconMap: { [key: string]: string } = {
-    BTC_KRW: "₿",
-    ETH_KRW: "Ξ",
-    XRP_KRW: "✕",
-    DOGE_KRW: "Ɖ",
-    STRK_KRW: "⭐",
-    BONK_KRW: "🦴",
-    TRUMP_KRW: "🇺🇸",
-    PENGU_KRW: "🐧",
-    SOL_KRW: "◎",
-    ADA_KRW: "₳",
-    PEPE_KRW: "🐸",
-  };
 
   // 저장된 실시간 데이터로 테이블 채우기
   // 변동률(chgRate)을 기준으로 내림차순 정렬
@@ -118,6 +123,33 @@ function redrawTable(): void {
     }
 
     const icon: string = iconMap[symbol] || " "; // Get icon, default to space if not found
+
+    const coinConfig = appConfig.coins.find((c) => c.symbol === symbol);
+    let profitLossRate: string;
+    let profitLossColor = chalk.white;
+
+    if (coinConfig && coinConfig.averagePurchasePrice > 0) {
+      const currentPrice = parseFloat(data.closePrice);
+      const avgPrice = coinConfig.averagePurchasePrice;
+      const rate = ((currentPrice - avgPrice) / avgPrice) * 100;
+      profitLossRate = `${rate.toFixed(2)}%`;
+
+      if (rate > 0) {
+        profitLossColor = chalk.green;
+      } else if (rate < 0) {
+        profitLossColor = chalk.red;
+      }
+    } else {
+      // If averagePurchasePrice is 0 or undefined, show change rate
+      const changeRateValue = parseFloat(data.chgRate);
+      profitLossRate = `${changeRateValue.toFixed(2)}%`;
+      if (changeRateValue > 0) {
+        profitLossColor = chalk.green;
+      } else if (changeRateValue < 0) {
+        profitLossColor = chalk.red;
+      }
+    }
+
     table.push([
       chalk.yellow(`${icon} ${symbol}`),
       priceColor(`${price} KRW`), // Apply color to price
@@ -125,6 +157,7 @@ function redrawTable(): void {
       parseFloat(data.lowPrice).toLocaleString("ko-KR"), // Low Price
       rateColor(`${changeAmount.toLocaleString("ko-KR")} KRW`),
       rateColor(`${changeRate.toFixed(2)}%`),
+      profitLossColor(profitLossRate), // Profit/Loss Rate
     ]);
   }
 
