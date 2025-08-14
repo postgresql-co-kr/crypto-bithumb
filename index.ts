@@ -162,7 +162,7 @@ function redrawTable(): void {
     } else {
       // If averagePurchasePrice is 0 or undefined, show change rate
       const changeRateValue = parseFloat(data.chgRate);
-      profitLossRate = `${changeRateValue.toFixed(2)}%`;
+      profitLossRate = `-`;
       if (changeRateValue > 0) {
         profitLossColor = chalk.green;
       } else if (changeRateValue < 0) {
