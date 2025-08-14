@@ -94,10 +94,11 @@ function redrawTable(): void {
       chalk.magentaBright("수익률"), // Profit/Loss Rate
       chalk.magentaBright("변동률(24H)"),
       chalk.magentaBright("변동금액(24H)"),
+      chalk.magentaBright("전일종가"),
       chalk.magentaBright("고가(24H)"), // High Price
       chalk.magentaBright("저가(24H)"), // Low Price
     ],
-    colWidths: [15, 15, 10, 15, 15, 18, 15, 15], // Added width for 체결강도
+    colWidths: [15, 15, 10, 15, 15, 18, 15, 15, 15],
   });
 
   // 저장된 실시간 데이터로 테이블 채우기
@@ -177,6 +178,7 @@ function redrawTable(): void {
       profitLossColor(profitLossRate), // Profit/Loss Rate
       rateColor(`${changeRate.toFixed(2)}%`),
       rateColor(`${changeAmount.toLocaleString("ko-KR")} KRW`),
+      parseFloat(data.prevClosePrice).toLocaleString("ko-KR"),
       parseFloat(data.highPrice).toLocaleString("ko-KR"), // High Price
       parseFloat(data.lowPrice).toLocaleString("ko-KR"), // Low Price
     ]);
