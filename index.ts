@@ -3,6 +3,20 @@ import chalk from "chalk";
 import Table from "cli-table3";
 import * as fs from "fs";
 
+// 커맨드 라인 인수 처리
+const args = process.argv.slice(2);
+let sortBy = 'name'; // 기본 정렬: 이름
+const sortByArgIndex = args.indexOf('--sort-by');
+if (sortByArgIndex > -1 && args[sortByArgIndex + 1]) {
+    const sortArg = args[sortByArgIndex + 1];
+    // 허용된 정렬 옵션인지 확인
+    if (['name', 'rate'].includes(sortArg)) {
+        sortBy = sortArg;
+    } else {
+        console.log(chalk.yellow(`Warning: Invalid sort option '${sortArg}'. Defaulting to 'name'.`));
+    }
+}
+
 // Interface for coin configuration from config.json
 interface CoinConfig {
   symbol: string;
@@ -86,12 +100,15 @@ function redrawTable(): void {
   });
 
   // 저장된 실시간 데이터로 테이블 채우기
-  // 변동률(chgRate)을 기준으로 내림차순 정렬
+  // --sort-by 인수에 따라 정렬. 기본은 이름순.
   const sortedSymbols: string[] = Object.keys(realTimeData).sort(
     (a: string, b: string) => {
-      const rateA: number = parseFloat(realTimeData[a].chgRate);
-      const rateB: number = parseFloat(realTimeData[b].chgRate);
-      return rateB - rateA; // 내림차순 정렬
+      if (sortBy === "rate") {
+        const rateA: number = parseFloat(realTimeData[a].chgRate);
+        const rateB: number = parseFloat(realTimeData[b].chgRate);
+        return rateB - rateA; // 변동률 기준 내림차순
+      }
+      return a.localeCompare(b); // 이름순 (기본)
     }
   );
 
