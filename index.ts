@@ -161,9 +161,51 @@ function redrawTable(): void {
     ]);
   }
 
+  // Calculate overall market sentiment
+  let totalWeightedChange = 0;
+  let totalVolume = 0;
+
+  for (const symbol of Object.keys(realTimeData)) {
+    const data = realTimeData[symbol];
+    const chgRate = parseFloat(data.chgRate);
+    const tradeValue = parseFloat(data.value); // Using trade value as weight
+
+    if (!isNaN(chgRate) && !isNaN(tradeValue)) {
+      totalWeightedChange += chgRate * tradeValue;
+      totalVolume += tradeValue; // totalVolume 대신 totalValue로 변경
+    }
+  }
+
+  let marketSentiment = "";
+  let sentimentColor = chalk.white;
+
+  if (totalVolume > 0) {
+    const averageChange = totalWeightedChange / totalVolume;
+    if (averageChange > 0.5) { // Threshold for significant upward trend
+      marketSentiment = "전체 시장: 강한 상승세 🚀";
+      sentimentColor = chalk.green;
+    } else if (averageChange > 0) {
+      marketSentiment = "전체 시장: 상승세 📈";
+      sentimentColor = chalk.green;
+    } else if (averageChange < -0.5) { // Threshold for significant downward trend
+      marketSentiment = "전체 시장: 강한 하락세 📉";
+      sentimentColor = chalk.red;
+    } else if (averageChange < 0) {
+      marketSentiment = "전체 시장: 하락세 📉";
+      sentimentColor = chalk.red;
+    } else {
+      marketSentiment = "전체 시장: 보합세 ↔️";
+      sentimentColor = chalk.white;
+    }
+  } else {
+    marketSentiment = "전체 시장: 데이터 부족";
+    sentimentColor = chalk.gray;
+  }
+
   // 콘솔 지우고 테이블 출력
   console.clear();
   console.log(chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit)"));
+  console.log(sentimentColor(marketSentiment)); // Display market sentiment
   console.log(table.toString());
 }
 

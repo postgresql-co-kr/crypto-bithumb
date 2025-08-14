@@ -46,3 +46,6 @@ node dist/index.js
 - All work should be based on the current directory.
 - Adhere to existing code conventions and style.
 - Ensure TypeScript compilation (`pnpm build`) passes without errors before committing changes.
+
+## Communication Guidelines
+- **Explanation Language:** All future explanations and communication from the agent will be in Korean.
