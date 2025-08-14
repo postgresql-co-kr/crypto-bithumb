@@ -77,8 +77,8 @@ function redrawTable(): void {
       chalk.blue("현재가"),
       chalk.blue("체결강도"), // volumePower
       chalk.blue("수익률"), // Profit/Loss Rate
-      chalk.blue("변동금액(24H)"),
       chalk.blue("변동률(24H)"),
+      chalk.blue("변동금액(24H)"),
       chalk.blue("고가(24H)"), // High Price
       chalk.blue("저가(24H)"), // Low Price
     ],
@@ -156,8 +156,8 @@ function redrawTable(): void {
       priceColor(`${price} KRW`),
       parseFloat(data.volumePower).toFixed(2),
       profitLossColor(profitLossRate), // Profit/Loss Rate
-      rateColor(`${changeAmount.toLocaleString("ko-KR")} KRW`),
       rateColor(`${changeRate.toFixed(2)}%`),
+      rateColor(`${changeAmount.toLocaleString("ko-KR")} KRW`),
       parseFloat(data.highPrice).toLocaleString("ko-KR"), // High Price
       parseFloat(data.lowPrice).toLocaleString("ko-KR"), // Low Price
     ]);
