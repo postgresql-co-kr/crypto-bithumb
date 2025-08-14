@@ -3,13 +3,15 @@
   "version": "1.0.0",
   "description": "A real-time cryptocurrency price tracker for Bithumb.",
   "main": "dist/index.js",
+  "bin": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "tsc",
-    "test": "echo \"No test specified\""
+    "test": "echo \"No test specified\"",
+    "package": "pnpm build && pkg ."
   },
   "keywords": [
     "debate300",
@@ -22,13 +24,19 @@
   "license": "ISC",
   "packageManager": "pnpm@10.12.4",
   "dependencies": {
-    "chalk": "^5.5.0",
+    "chalk": "4.1.2",
     "cli-table3": "^0.6.5",
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@types/chalk": "^2.2.4",
     "@types/ws": "^8.18.1",
+    "pkg": "^5.8.1",
     "typescript": "^5.9.2"
+  },
+  "pkg": {
+    "targets": [
+      "node18-win-x64"
+    ],
+    "outputPath": "bin"
   }
 }
