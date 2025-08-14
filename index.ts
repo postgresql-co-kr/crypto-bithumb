@@ -20,23 +20,23 @@ let iconMap: Record<string, string> = {};
 
 // Interface for the content received from Bithumb WebSocket
 interface TickerContent {
-  volumePower: string;
-  chgAmt: string;
-  chgRate: string;
-  prevClosePrice: string;
-  buyVolume: string;
-  sellVolume: string;
-  volume: string;
-  value: string;
-  highPrice: string;
-  lowPrice: string;
-  closePrice: string;
-  openPrice: string;
-  time: string;
-  date: string;
-  tickType: string;
-  symbol: string;
-  lastClosePrice?: string; // Added for dynamic price comparison
+  volumePower: string; // 체결강도(매수/매도 비율 지표, 100↑이면 매수 우위 경향)
+  chgAmt: string; // 변동금액(기준 시점 대비 가격 변화 절대값)
+  chgRate: string; // 변동률(기준 시점 대비 % 변화)
+  prevClosePrice: string; // 전일 종가
+  buyVolume: string; // 누적 매수 체결량
+  sellVolume: string; // 누적 매도 체결량
+  volume: string; // 누적 거래량(코인 수량)
+  value: string; // 누적 거래금액(원화 등 표시통화 합계)
+  highPrice: string; // 고가
+  lowPrice: string; // 저가
+  closePrice: string; // 종가(현재가)
+  openPrice: string; // 시가
+  time: string; // 시간(HHMMSS, 예: "174044")
+  date: string; // 일자(YYYYMMDD, 예: "20211204")
+  tickType: string; // 변동 기준 구간: "30M" | "1H" | "12H" | "24H" | "MID"
+  symbol: string; // 종목 심볼(예: "BTC_KRW")
+  lastClosePrice?: string; // (사용자 추가) 직전 종가 비교용 등 내부 계산 편의 필드
 }
 
 // Interface for realTimeData object
@@ -181,13 +181,15 @@ function redrawTable(): void {
 
   if (totalVolume > 0) {
     const averageChange = totalWeightedChange / totalVolume;
-    if (averageChange > 0.5) { // Threshold for significant upward trend
+    if (averageChange > 0.5) {
+      // Threshold for significant upward trend
       marketSentiment = "전체 시장: 강한 상승세 🚀";
       sentimentColor = chalk.green;
     } else if (averageChange > 0) {
       marketSentiment = "전체 시장: 상승세 📈";
       sentimentColor = chalk.green;
-    } else if (averageChange < -0.5) { // Threshold for significant downward trend
+    } else if (averageChange < -0.5) {
+      // Threshold for significant downward trend
       marketSentiment = "전체 시장: 강한 하락세 📉";
       sentimentColor = chalk.red;
     } else if (averageChange < 0) {
