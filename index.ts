@@ -166,15 +166,20 @@ function redrawTable(): void {
   // Calculate overall market sentiment
   let totalWeightedChange = 0;
   let totalVolume = 0;
+  let totalWeightedVolumePower = 0;
 
   for (const symbol of Object.keys(realTimeData)) {
     const data = realTimeData[symbol];
     const chgRate = parseFloat(data.chgRate);
     const tradeValue = parseFloat(data.value); // Using trade value as weight
+    const volumePower = parseFloat(data.volumePower);
 
-    if (!isNaN(chgRate) && !isNaN(tradeValue)) {
+    if (!isNaN(chgRate) && !isNaN(tradeValue) && tradeValue > 0) {
       totalWeightedChange += chgRate * tradeValue;
       totalVolume += tradeValue; // totalVolume 대신 totalValue로 변경
+      if (!isNaN(volumePower)) {
+        totalWeightedVolumePower += volumePower * tradeValue;
+      }
     }
   }
 
@@ -201,6 +206,8 @@ function redrawTable(): void {
       marketSentiment = "전체 시장: 보합세 ↔️";
       sentimentColor = chalk.white;
     }
+    const averageVolumePower = totalWeightedVolumePower / totalVolume;
+    marketSentiment += ` | 체결강도: ${averageVolumePower.toFixed(2)}`;
   } else {
     marketSentiment = "전체 시장: 데이터 부족";
     sentimentColor = chalk.gray;
