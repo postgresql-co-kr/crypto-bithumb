@@ -237,21 +237,23 @@ function redrawTable(): void {
     head: [
       chalk.magentaBright("코인"),
       chalk.magentaBright("현재가"),
+      chalk.magentaBright("전일대비"),
+      chalk.magentaBright("전일대비금액"),
       chalk.magentaBright("체결강도"),
-      chalk.magentaBright("변동률"),
-      chalk.magentaBright("변동금액"),
-
-      chalk.magentaBright("수익률"),
+      
       chalk.magentaBright("평가손익"),
-      chalk.magentaBright("평가금액"),
+      chalk.magentaBright("수익률"),
       chalk.magentaBright("보유수량"),
       chalk.magentaBright("평균매수가"),
+
+      chalk.magentaBright("매수금액"),
+      chalk.magentaBright("평가금액"),
 
       chalk.magentaBright("전일종가"),
       chalk.magentaBright("고가"),
       chalk.magentaBright("저가"),
     ],
-    colWidths: [15, 15, 10, 12, 18, 18, 18, 18, 15, 18, 15, 15, 15],
+    colWidths: [15, 18, 10, 15, 10, 15, 10, 12, 18, 18, 18, 15, 15, 15],
   });
 
   // 저장된 실시간 데이터로 테이블 채우기
@@ -340,6 +342,9 @@ function redrawTable(): void {
           maximumFractionDigits: 0,
         })} KRW`;
         holdingQuantity = `${balance.toLocaleString("ko-KR")}`;
+
+
+
       }
 
       if (rate > 0) {
@@ -352,15 +357,17 @@ function redrawTable(): void {
     table.push([
       chalk.yellow(`${icon} ${symbol}`),
       priceColor(`${price} KRW`),
-      parseFloat(data.volumePower).toFixed(2),
       rateColor(`${changeRate.toFixed(2)}%`),
       rateColor(`${changeAmount.toLocaleString("ko-KR")} KRW`),
+      parseFloat(data.volumePower).toFixed(2),
 
-      profitLossColor(profitLossRate),
       profitLossColor(profitLossAmount),
-      priceColor(evaluationAmount),
+      profitLossColor(profitLossRate),
       holdingQuantity,
       priceColor(avgPurchasePrice),
+      
+      purchaseAmount,
+      priceColor(evaluationAmount),
 
       parseFloat(data.prevClosePrice).toLocaleString("ko-KR"),
       parseFloat(data.highPrice).toLocaleString("ko-KR"),
