@@ -81,6 +81,10 @@ interface RealTimeData {
   [key: string]: TickerContent;
 }
 
+let userPoints: number = 0;
+let krwBalance: number = 0;
+let krwLocked: number = 0;
+
 let appConfig: AppConfig;
 let apiConfig: ApiConfig | null = null; // Initialize apiConfig as nullable
 
@@ -123,7 +127,7 @@ const BITHUMB_API_BASE_URL = "https://api.bithumb.com";
 // Function to fetch user holdings from Bithumb API
 async function fetchUserHoldings(): Promise<CoinConfig[]> {
   if (!apiConfig) {
-    console.log(chalk.yellow("API keys not available. Cannot fetch user holdings."));
+    // console.log(chalk.yellow("API keys not available. Cannot fetch user holdings."));
     return [];
   }
 
@@ -164,8 +168,12 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
         const avg_buy_price = parseFloat(item.avg_buy_price);
         const unit_currency = item.unit_currency || "KRW"; // unit_currency 추가
 
-        // avg_buy_price 값이 0보다 큰 경우에만 추가
-        if (avg_buy_price > 0) {
+        if (currency === 'P') {
+          userPoints = balance;
+        } else if (currency === 'KRW') {
+          krwBalance = balance;
+          krwLocked = locked;
+        } else if (avg_buy_price > 0) {
           userHoldings.push({
             symbol: currency,
             icon: iconMap[currency + "_" + unit_currency] || " ", // unit_currency 추가
@@ -177,7 +185,7 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
         }
       });
 
-      console.log(chalk.green("Successfully fetched user holdings from Bithumb API."));
+      // console.log(chalk.green("Successfully fetched user holdings from Bithumb API."));
       return userHoldings;
     } else {
       console.error(chalk.red(`Bithumb API Error: ${response.data.message}`));
@@ -190,37 +198,49 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
   }
 }
 
+function updateCoinConfiguration(userHoldings: CoinConfig[]) {
+  if (userHoldings.length <= 0) return;
+
+  const mergedCoins: CoinConfig[] = [];
+  const apiSymbols = new Set(userHoldings.map(h => h.symbol + "_" + (h.unit_currency || "KRW")));
+
+  userHoldings.forEach(apiCoin => {
+    mergedCoins.push(apiCoin);
+  });
+
+  appConfig.coins.forEach(configCoin => {
+    if (!apiSymbols.has(configCoin.symbol + "_" + (configCoin.unit_currency || "KRW"))) {
+      mergedCoins.push(configCoin);
+    } else {
+      const existingCoin = mergedCoins.find(mc => mc.symbol === configCoin.symbol && mc.unit_currency === configCoin.unit_currency);
+      if (existingCoin) {
+        existingCoin.icon = configCoin.icon;
+      }
+    }
+  });
+  appConfig.coins = mergedCoins;
+}
+
+
 // Modify appConfig and symbols based on API data if available
 async function initializeAppConfig() {
   if (apiConfig) {
     const userHoldings = await fetchUserHoldings();
-    if (userHoldings.length > 0) {
-      // Merge API data with existing config.json data, prioritizing API data
-      const mergedCoins: CoinConfig[] = [];
-      const apiSymbols = new Set(userHoldings.map(h => h.symbol + "_" + (h.unit_currency || "KRW"))); // unit_currency 추가
-
-      // Add coins from API data
-      userHoldings.forEach(apiCoin => {
-        mergedCoins.push(apiCoin);
-      });
-
-      // Add coins from config.json that are not in API data, or update icons
-      appConfig.coins.forEach(configCoin => {
-        if (!apiSymbols.has(configCoin.symbol + "_" + (configCoin.unit_currency || "KRW"))) { // unit_currency 추가
-          mergedCoins.push(configCoin);
-        } else {
-          // If coin exists in API data, update its icon from config.json
-          const existingCoin = mergedCoins.find(mc => mc.symbol === configCoin.symbol && mc.unit_currency === configCoin.unit_currency); // unit_currency 추가
-          if (existingCoin) {
-            existingCoin.icon = configCoin.icon;
-          }
-        }
-      });
-      appConfig.coins = mergedCoins;
-      symbols = appConfig.coins.map(coin => coin.symbol + "_" + (coin.unit_currency || "KRW")); // unit_currency 추가
-      console.log(chalk.green("App configuration updated with user holdings from Bithumb API."));
-    }
+    updateCoinConfiguration(userHoldings);
+    symbols = appConfig.coins.map(coin => coin.symbol + "_" + (coin.unit_currency || "KRW")); // unit_currency 추가
+    console.log(chalk.green("App configuration initialized with user holdings from Bithumb API."));
   }
+}
+
+function schedulePeriodicUpdates() {
+  setInterval(async () => {
+      if (apiConfig) {
+          // console.log(chalk.cyan("Periodically updating coin information..."));
+          const userHoldings = await fetchUserHoldings();
+          updateCoinConfiguration(userHoldings);
+          // console.log(chalk.cyan("Coin information has been updated."));
+      }
+  }, 10000);
 }
 
 // Bithumb WebSocket URL
@@ -232,6 +252,10 @@ let redrawTimeout: NodeJS.Timeout | null = null;
 
 // 콘솔을 지우고 테이블을 다시 그리는 함수
 function redrawTable(): void {
+  let totalEvaluationAmount = 0;
+  let totalProfitLossAmount = 0;
+  let totalPurchaseAmount = 0;
+
   // 테이블 생성
   const table = new Table({
     head: [
@@ -328,16 +352,19 @@ function redrawTable(): void {
      
       if(balance > 0 ) {
         const pnl = (currentPrice - avgPrice) * balance;
+        totalProfitLossAmount += pnl;
         profitLossAmount = `${pnl.toLocaleString("ko-KR", {
           maximumFractionDigits: 0,
         })} KRW`;
   
         const evalAmount = currentPrice * balance;
+        totalEvaluationAmount += evalAmount;
         evaluationAmount = `${evalAmount.toLocaleString("ko-KR", {
           maximumFractionDigits: 0,
         })} KRW`;
   
         const purchAmount = avgPrice * balance;
+        totalPurchaseAmount += purchAmount;
         purchaseAmount = `${purchAmount.toLocaleString("ko-KR", {
           maximumFractionDigits: 0,
         })} KRW`;
@@ -421,6 +448,29 @@ function redrawTable(): void {
         ? volumePowers.reduce((sum, vp) => sum + vp, 0) / volumePowers.length
         : 0;
     marketSentiment += ` | 체결강도: ${averageVolumePower.toFixed(2)}`;
+
+    if (totalPurchaseAmount > 0) {
+      const formattedPurchase = totalPurchaseAmount.toLocaleString("ko-KR", { maximumFractionDigits: 0 });
+      const formattedEval = totalEvaluationAmount.toLocaleString("ko-KR", { maximumFractionDigits: 0 });
+      const formattedPnl = totalProfitLossAmount.toLocaleString("ko-KR", { maximumFractionDigits: 0 });
+      const pnlColor = totalProfitLossAmount > 0 ? chalk.green : totalProfitLossAmount < 0 ? chalk.red : chalk.white;
+      
+      marketSentiment += ` | 총 매수금액: ${formattedPurchase} KRW`;
+      marketSentiment += ` | 총 평가금액: ${formattedEval} KRW`;
+      marketSentiment += ` | 총 평가손익: ${pnlColor(`${formattedPnl} KRW`)}`;
+    }
+
+    const krwHoldings = krwBalance + krwLocked;
+    if (krwHoldings > 0) {
+        marketSentiment += ` | 보유원화: ${krwHoldings.toLocaleString("ko-KR", { maximumFractionDigits: 0 })} KRW`;
+    }
+    if (krwBalance > 0) {
+        marketSentiment += ` | 주문가능원화: ${krwBalance.toLocaleString("ko-KR", { maximumFractionDigits: 0 })} KRW`;
+    }
+    if (userPoints > 0) {
+        marketSentiment += ` | 포인트: ${userPoints.toLocaleString("ko-KR", { maximumFractionDigits: 0 })}`;
+    }
+
   } else {
     marketSentiment = "전체 시장: 데이터 부족";
     sentimentColor = chalk.gray;
@@ -491,4 +541,9 @@ function connect(): void {
 }
 
 // 프로그램 시작
-initializeAppConfig().then(connect);
+initializeAppConfig().then(() => {
+  connect();
+  if(apiConfig) {
+      schedulePeriodicUpdates();
+  }
+});
