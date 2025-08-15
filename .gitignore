@@ -9,3 +9,7 @@
 
 # Environment variables
 .env
+
+# API Keys
+api_keys.json
+bithumb-test.js

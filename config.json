@@ -1,64 +1,76 @@
 {
   "coins": [
     {
-      "symbol": "BTC_KRW",
+      "symbol": "BTC",
       "icon": "₿",
-      "averagePurchasePrice": 0
+      "averagePurchasePrice": 0,
+      "unit_currency": "KRW"
     },
     {
-      "symbol": "USDT_KRW",
+      "symbol": "USDT",
       "icon": "$",
-      "averagePurchasePrice": 0
+      "averagePurchasePrice": 0,
+      "unit_currency": "KRW"
     },
     {
-      "symbol": "ETH_KRW",
+      "symbol": "ETH",
       "icon": "Ξ",
-      "averagePurchasePrice": 0
+      "averagePurchasePrice": 0,
+      "unit_currency": "KRW"
     },
     {
-      "symbol": "XRP_KRW",
+      "symbol": "XRP",
       "icon": "✕",
-      "averagePurchasePrice": 4512
+      "averagePurchasePrice": 4512,
+      "unit_currency": "KRW"
     },
     {
-      "symbol": "DOGE_KRW",
+      "symbol": "DOGE",
       "icon": "Ɖ",
-      "averagePurchasePrice": 327.9
+      "averagePurchasePrice": 327.9,
+      "unit_currency": "KRW"
     },
     {
-      "symbol": "STRK_KRW",
+      "symbol": "STRK",
       "icon": "⭐",
-      "averagePurchasePrice": 229.7
+      "averagePurchasePrice": 229.7,
+      "unit_currency": "KRW"
     },
     {
-      "symbol": "BONK_KRW",
+      "symbol": "BONK",
       "icon": "🦴",
-      "averagePurchasePrice": 0
+      "averagePurchasePrice": 0,
+      "unit_currency": "KRW"
     },
     {
-      "symbol": "TRUMP_KRW",
+      "symbol": "TRUMP",
       "icon": "🇺🇸",
-      "averagePurchasePrice": 13967
+      "averagePurchasePrice": 13967,
+      "unit_currency": "KRW"
     },
     {
-      "symbol": "PENGU_KRW",
+      "symbol": "PENGU",
       "icon": "🐧",
-      "averagePurchasePrice": 0
+      "averagePurchasePrice": 0,
+      "unit_currency": "KRW"
     },
     {
-      "symbol": "SOL_KRW",
+      "symbol": "SOL",
       "icon": "◎",
-      "averagePurchasePrice": 0
+      "averagePurchasePrice": 0,
+      "unit_currency": "KRW"
     },
     {
-      "symbol": "ADA_KRW",
+      "symbol": "ADA",
       "icon": "₳",
-      "averagePurchasePrice": 0
+      "averagePurchasePrice": 0,
+      "unit_currency": "KRW"
     },
     {
-      "symbol": "PEPE_KRW",
+      "symbol": "PEPE",
       "icon": "🐸",
-      "averagePurchasePrice": 0
+      "averagePurchasePrice": 0,
+      "unit_currency": "KRW"
     }
   ]
 }

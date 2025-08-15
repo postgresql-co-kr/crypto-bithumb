@@ -2,6 +2,10 @@ import WebSocket from "ws";
 import chalk from "chalk";
 import Table from "cli-table3";
 import * as fs from "fs";
+import axios from "axios";
+import * as crypto from "crypto"; // For HMAC-SHA512 signing
+import * as jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
 
 // 커맨드 라인 인수 처리
 const args = process.argv.slice(2);
@@ -22,11 +26,20 @@ interface CoinConfig {
   symbol: string;
   icon: string;
   averagePurchasePrice: number;
+  balance?: number; // 추가
+  locked?: number; // 추가
+  unit_currency?: string; // 추가
 }
 
 // Interface for the overall application configuration
 interface AppConfig {
   coins: CoinConfig[];
+}
+
+// Interface for API configuration from api_keys.json
+interface ApiConfig {
+  bithumb_api_key: string;
+  bithumb_secret_key: string;
 }
 
 // Define icon map
@@ -59,6 +72,8 @@ interface RealTimeData {
 }
 
 let appConfig: AppConfig;
+let apiConfig: ApiConfig | null = null; // Initialize apiConfig as nullable
+
 try {
   const configPath = "./config.json";
   const configContent = fs.readFileSync(configPath, "utf8");
@@ -68,13 +83,137 @@ try {
   process.exit(1); // Exit if config cannot be loaded
 }
 
+// Try to load API keys
+try {
+  const apiConfigPath = "./api_keys.json";
+  const apiConfigContent = fs.readFileSync(apiConfigPath, "utf8");
+  apiConfig = JSON.parse(apiConfigContent);
+  if (!apiConfig?.bithumb_api_key || !apiConfig?.bithumb_secret_key) {
+    console.warn(chalk.yellow("Warning: api_keys.json contains placeholder API keys. Please update them for API functionality."));
+    apiConfig = null; // Treat as no API keys if placeholders are present
+  } else {
+    console.log(chalk.green("API keys loaded successfully. Attempting to fetch user holdings from Bithumb API."));
+  }
+} catch (error) {
+  console.log(chalk.yellow("api_keys.json not found or could not be loaded. Proceeding with config.json only."));
+  apiConfig = null;
+}
+
 // Populate iconMap after appConfig is loaded
 appConfig.coins.forEach((coin) => {
-  iconMap[coin.symbol] = coin.icon;
+  iconMap[coin.symbol + "_" + (coin.unit_currency || "KRW")] = coin.icon; // unit_currency 추가
 });
 
 // 구독할 코인 목록 (예: BTC, ETH, XRP)
-const symbols: string[] = appConfig.coins.map((coin) => coin.symbol);
+let symbols: string[] = appConfig.coins.map((coin) => coin.symbol + "_" + (coin.unit_currency || "KRW")); // unit_currency 추가
+
+// Bithumb API Base URL
+// Bithumb API Base URL (for v1 API)
+// Bithumb API Base URL (for v1 API)
+const BITHUMB_API_BASE_URL = "https://api.bithumb.com";
+
+// Function to fetch user holdings from Bithumb API
+async function fetchUserHoldings(): Promise<CoinConfig[]> {
+  if (!apiConfig) {
+    console.log(chalk.yellow("API keys not available. Cannot fetch user holdings."));
+    return [];
+  }
+
+  const currentApiConfig: ApiConfig = apiConfig;
+
+  if (!currentApiConfig.bithumb_api_key || !currentApiConfig.bithumb_secret_key) {
+    console.log(chalk.yellow("Bithumb API key or secret is missing. Cannot fetch user holdings.\n"));
+    return [];
+  }
+
+  const endpoint = "/v1/accounts"; // 계좌 정보 엔드포인트
+  const fullUrl = `${BITHUMB_API_BASE_URL}${endpoint}`;
+
+  // JWT 토큰 생성
+  const payload = {
+    access_key: currentApiConfig.bithumb_api_key,
+    nonce: uuidv4(),
+    timestamp: Date.now()
+  };
+  const jwtToken = jwt.sign(payload, currentApiConfig.bithumb_secret_key);
+
+  try {
+    const response = await axios.get(fullUrl, { // GET 요청으로 변경
+      headers: {
+        Authorization: `Bearer ${jwtToken}`
+      },
+    });
+
+    if (response.status === 200) { // status 확인 조건 추가
+      const data = response.data; // response.data.data 사용
+      const userHoldings: CoinConfig[] = [];
+
+      // 응답 구조에 따라 데이터 처리
+      data.forEach((item: any) => {
+        const currency = item.currency;
+        const balance = parseFloat(item.balance);
+        const locked = parseFloat(item.locked);
+        const avg_buy_price = parseFloat(item.avg_buy_price);
+        const unit_currency = item.unit_currency || "KRW"; // unit_currency 추가
+
+        // avg_buy_price 값이 0보다 큰 경우에만 추가
+        if (avg_buy_price > 0) {
+          userHoldings.push({
+            symbol: currency,
+            icon: iconMap[currency + "_" + unit_currency] || " ", // unit_currency 추가
+            averagePurchasePrice: avg_buy_price,
+            balance: balance,
+            locked: locked,
+            unit_currency: unit_currency // unit_currency 추가
+          });
+        }
+      });
+
+      console.log(chalk.green("Successfully fetched user holdings from Bithumb API."));
+      return userHoldings;
+    } else {
+      console.error(chalk.red(`Bithumb API Error: ${response.data.message}`));
+      return [];
+    }
+
+  } catch (error) {
+    console.error(chalk.red("Error fetching user holdings from Bithumb API:"), error);
+    return [];
+  }
+}
+
+// Modify appConfig and symbols based on API data if available
+async function initializeAppConfig() {
+  if (apiConfig) {
+    const userHoldings = await fetchUserHoldings();
+    if (userHoldings.length > 0) {
+      // Merge API data with existing config.json data, prioritizing API data
+      const mergedCoins: CoinConfig[] = [];
+      const apiSymbols = new Set(userHoldings.map(h => h.symbol + "_" + (h.unit_currency || "KRW"))); // unit_currency 추가
+
+      // Add coins from API data
+      userHoldings.forEach(apiCoin => {
+        mergedCoins.push(apiCoin);
+      });
+
+      // Add coins from config.json that are not in API data, or update icons
+      appConfig.coins.forEach(configCoin => {
+        if (!apiSymbols.has(configCoin.symbol + "_" + (configCoin.unit_currency || "KRW"))) { // unit_currency 추가
+          mergedCoins.push(configCoin);
+        } else {
+          // If coin exists in API data, update its icon from config.json
+          const existingCoin = mergedCoins.find(mc => mc.symbol === configCoin.symbol && mc.unit_currency === configCoin.unit_currency); // unit_currency 추가
+          if (existingCoin) {
+            existingCoin.icon = configCoin.icon;
+          }
+        }
+      });
+      appConfig.coins = mergedCoins;
+      symbols = appConfig.coins.map(coin => coin.symbol + "_" + (coin.unit_currency || "KRW")); // unit_currency 추가
+      console.log(chalk.green("App configuration updated with user holdings from Bithumb API."));
+    }
+  }
+}
 
 // Bithumb WebSocket URL
 const wsUri: string = "wss://pubwss.bithumb.com/pub/ws";
@@ -145,7 +284,7 @@ function redrawTable(): void {
 
     const icon: string = iconMap[symbol] || " "; // Get icon, default to space if not found
 
-    const coinConfig = appConfig.coins.find((c) => c.symbol === symbol);
+    const coinConfig = appConfig.coins.find((c) => c.symbol + "_" + (c.unit_currency || "KRW") === symbol); // unit_currency 추가
     let profitLossRate: string;
     let profitLossColor = chalk.white;
 
@@ -225,7 +364,7 @@ function redrawTable(): void {
     const volumePowers = Object.values(realTimeData)
       .map((data) => parseFloat(data.volumePower))
       .filter((vp) => !isNaN(vp));
-    const averageVolumePower =
+    const averageVolumePower = 
       volumePowers.length > 0
         ? volumePowers.reduce((sum, vp) => sum + vp, 0) / volumePowers.length
         : 0;
@@ -235,7 +374,7 @@ function redrawTable(): void {
     sentimentColor = chalk.gray;
   }
 
-  // 콘솔 지우고 테이블 출력 (깜빡임 방지)
+  // 콘솔을 지우고 테이블 출력 (깜빡임 방지)
   process.stdout.write('\x1B[2J\x1B[H');
   console.log(chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit)"));
   console.log(sentimentColor(marketSentiment)); // Display market sentiment
@@ -268,7 +407,8 @@ function connect(): void {
       // Store the current closePrice as lastClosePrice for the next update
       if (realTimeData[content.symbol]) {
         content.lastClosePrice = realTimeData[content.symbol].closePrice;
-      } else {
+      }
+      else {
         // For the first message, set lastClosePrice to current closePrice
         content.lastClosePrice = content.closePrice;
       }
@@ -276,7 +416,7 @@ function connect(): void {
       // 실시간 데이터 업데이트
       realTimeData[content.symbol] = content;
       
-      // 깜빡임 감소를 위해 redrawTable 호출을 디바운스합니다.
+      // 깜빡임 감소를 위해 redrawTable 호출을 디바운스합니다. 따라서 redrawTable 호출을 디바운스합니다.
       if (!redrawTimeout) {
         redrawTimeout = setTimeout(() => {
           redrawTable();
@@ -299,4 +439,4 @@ function connect(): void {
 }
 
 // 프로그램 시작
-connect();
+initializeAppConfig().then(connect);
