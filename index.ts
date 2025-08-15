@@ -240,7 +240,7 @@ function redrawTable(): void {
 
   // 콘솔 지우고 테이블 출력 (깜빡임 방지)
   process.stdout.write('\x1B[2J\x1B[H');
-  console.log(chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit)"));
+  console.log(chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit) - Debate300.com"));
   console.log(sentimentColor(marketSentiment)); // Display market sentiment
   console.log(table.toString());
 }
@@ -284,7 +284,7 @@ function connect(): void {
         redrawTimeout = setTimeout(() => {
           redrawTable();
           redrawTimeout = null;
-        }, 80); // 80ms 간격으로 다시 그립니다.
+        }, 100); // 100ms 간격으로 다시 그립니다.
       }
     }
   });
