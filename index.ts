@@ -22,6 +22,7 @@ interface CoinConfig {
   symbol: string;
   icon: string;
   averagePurchasePrice: number;
+  unit_currency: string;
 }
 
 // Interface for the overall application configuration
@@ -70,11 +71,13 @@ try {
 
 // Populate iconMap after appConfig is loaded
 appConfig.coins.forEach((coin) => {
-  iconMap[coin.symbol] = coin.icon;
+  iconMap[`${coin.symbol}_${coin.unit_currency}`] = coin.icon;
 });
 
-// 구독할 코인 목록 (예: BTC, ETH, XRP)
-const symbols: string[] = appConfig.coins.map((coin) => coin.symbol);
+// 구독할 코인 목록 (예: BTC_KRW, ETH_KRW)
+const symbols: string[] = appConfig.coins.map(
+  (coin) => `${coin.symbol}_${coin.unit_currency}`
+);
 
 // Bithumb WebSocket URL
 const wsUri: string = "wss://pubwss.bithumb.com/pub/ws";
@@ -92,13 +95,13 @@ function redrawTable(): void {
       chalk.magentaBright("현재가"),
       chalk.magentaBright("체결강도"), // volumePower
       chalk.magentaBright("수익률"), // Profit/Loss Rate
-      chalk.magentaBright("변동률(24H)"),
-      chalk.magentaBright("변동금액(24H)"),
-      chalk.magentaBright("전일종가"),
-      chalk.magentaBright("고가(24H)"), // High Price
-      chalk.magentaBright("저가(24H)"), // Low Price
+      chalk.magentaBright("전일대비"),
+      chalk.magentaBright("전일대비금액"),
+      chalk.magentaBright("시가"),
+      chalk.magentaBright("고가"), // High Price
+      chalk.magentaBright("저가"), // Low Price
     ],
-    colWidths: [15, 15, 10, 15, 15, 18, 15, 15, 15],
+    colWidths: [15, 15, 10, 10, 15, 18, 15, 15, 15],
   });
 
   // 저장된 실시간 데이터로 테이블 채우기
@@ -145,7 +148,7 @@ function redrawTable(): void {
 
     const icon: string = iconMap[symbol] || " "; // Get icon, default to space if not found
 
-    const coinConfig = appConfig.coins.find((c) => c.symbol === symbol);
+    const coinConfig = appConfig.coins.find((c) => `${c.symbol}_${c.unit_currency}` === symbol);
     let profitLossRate: string;
     let profitLossColor = chalk.white;
 
@@ -225,7 +228,7 @@ function redrawTable(): void {
     const volumePowers = Object.values(realTimeData)
       .map((data) => parseFloat(data.volumePower))
       .filter((vp) => !isNaN(vp));
-    const averageVolumePower =
+    const averageVolumePower = 
       volumePowers.length > 0
         ? volumePowers.reduce((sum, vp) => sum + vp, 0) / volumePowers.length
         : 0;
