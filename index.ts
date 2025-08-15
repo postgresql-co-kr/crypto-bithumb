@@ -6,6 +6,7 @@ import axios from "axios";
 import * as crypto from "crypto"; // For HMAC-SHA512 signing
 import * as jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
+import { config } from "process";
 
 // 커맨드 라인 인수 처리
 const args = process.argv.slice(2);
@@ -241,13 +242,14 @@ function redrawTable(): void {
       chalk.magentaBright("평가손익"),
       chalk.magentaBright("평가금액"),
       chalk.magentaBright("보유수량"),
-      chalk.magentaBright("변동률(24H)"),
-      chalk.magentaBright("변동금액(24H)"),
+      chalk.magentaBright("평균매수가"),
+      chalk.magentaBright("변동률"),
+      chalk.magentaBright("변동금액"),
       chalk.magentaBright("전일종가"),
-      chalk.magentaBright("고가(24H)"),
-      chalk.magentaBright("저가(24H)"),
+      chalk.magentaBright("고가"),
+      chalk.magentaBright("저가"),
     ],
-    colWidths: [15, 15, 10, 12, 18, 18, 18, 15, 18, 15, 15, 15],
+    colWidths: [15, 15, 10, 12, 18, 18, 18, 18, 15, 18, 15, 15, 15],
   });
 
   // 저장된 실시간 데이터로 테이블 채우기
@@ -264,6 +266,8 @@ function redrawTable(): void {
     }
   );
 
+  console.log(sortedSymbols);
+  
   for (const symbol of sortedSymbols) {
     // Iterate over sorted symbols
     const data: TickerContent = realTimeData[symbol];
@@ -301,58 +305,49 @@ function redrawTable(): void {
     let evaluationAmount = "-";
     let purchaseAmount = "-";
     let holdingQuantity = "-";
-    let profitLossColor = chalk.white;
+    let avgPurchasePrice = "-";
+    let profitLossColor = chalk.white;   
 
+    
     if (
       coinConfig &&
-      coinConfig.averagePurchasePrice > 0 &&
-      coinConfig.balance &&
-      coinConfig.balance > 0
+      coinConfig.averagePurchasePrice > 0
     ) {
       const currentPrice = parseFloat(data.closePrice);
       const avgPrice = coinConfig.averagePurchasePrice;
-      const balance = coinConfig.balance;
-
-      // 이 줄을 추가하여 디버깅합니다.
-      console.log(`Calculating profit/loss for ${symbol}:`, {
-        averagePurchasePrice: coinConfig.averagePurchasePrice,
-        balance: coinConfig.balance,
-        closePrice: data.closePrice
-      });
+      avgPurchasePrice = avgPrice.toLocaleString("ko-KR");
 
       const rate = ((currentPrice - avgPrice) / avgPrice) * 100;
       profitLossRate = `${rate.toFixed(2)}%`;
 
-      const pnl = (currentPrice - avgPrice) * balance;
-      profitLossAmount = `${pnl.toLocaleString("ko-KR", {
-        maximumFractionDigits: 0,
-      })} KRW`;
-
-      const evalAmount = currentPrice * balance;
-      evaluationAmount = `${evalAmount.toLocaleString("ko-KR", {
-        maximumFractionDigits: 0,
-      })} KRW`;
-
-      const purchAmount = avgPrice * balance;
-      purchaseAmount = `${purchAmount.toLocaleString("ko-KR", {
-        maximumFractionDigits: 0,
-      })} KRW`;
-
-      holdingQuantity = `${balance.toLocaleString("ko-KR")}`;
+      let balance = 0;
+      balance += coinConfig.balance ? coinConfig.balance : 0;
+      balance += coinConfig.locked ? coinConfig.locked : 0;
+     
+      if(balance > 0 ) {
+        const pnl = (currentPrice - avgPrice) * balance;
+        profitLossAmount = `${pnl.toLocaleString("ko-KR", {
+          maximumFractionDigits: 0,
+        })} KRW`;
+  
+        const evalAmount = currentPrice * balance;
+        evaluationAmount = `${evalAmount.toLocaleString("ko-KR", {
+          maximumFractionDigits: 0,
+        })} KRW`;
+  
+        const purchAmount = avgPrice * balance;
+        purchaseAmount = `${purchAmount.toLocaleString("ko-KR", {
+          maximumFractionDigits: 0,
+        })} KRW`;
+        holdingQuantity = `${balance.toLocaleString("ko-KR")}`;
+      }
 
       if (rate > 0) {
         profitLossColor = chalk.green;
       } else if (rate < 0) {
         profitLossColor = chalk.red;
       }
-    } else {
-      // 이 else 블록을 추가하여 디버깅합니다.
-      console.log(`Skipping profit/loss for ${symbol}:`, {
-        coinConfigExists: !!coinConfig,
-        averagePurchasePrice: coinConfig?.averagePurchasePrice,
-        balance: coinConfig?.balance
-      });
-    }
+    } 
 
     table.push([
       chalk.yellow(`${icon} ${symbol}`),
@@ -362,6 +357,7 @@ function redrawTable(): void {
       profitLossColor(profitLossAmount),
       priceColor(evaluationAmount),
       holdingQuantity,
+      priceColor(avgPurchasePrice),
       rateColor(`${changeRate.toFixed(2)}%`),
       rateColor(`${changeAmount.toLocaleString("ko-KR")} KRW`),
       parseFloat(data.prevClosePrice).toLocaleString("ko-KR"),
@@ -468,7 +464,7 @@ function connect(): void {
         redrawTimeout = setTimeout(() => {
           redrawTable();
           redrawTimeout = null;
-        }, 80); // 80ms 간격으로 다시 그립니다.
+        }, 100); // 100ms 간격으로 다시 그립니다.
       }
     }
   });
