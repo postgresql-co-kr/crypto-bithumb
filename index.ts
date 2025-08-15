@@ -238,13 +238,15 @@ function redrawTable(): void {
       chalk.magentaBright("코인"),
       chalk.magentaBright("현재가"),
       chalk.magentaBright("체결강도"),
+      chalk.magentaBright("변동률"),
+      chalk.magentaBright("변동금액"),
+
       chalk.magentaBright("수익률"),
       chalk.magentaBright("평가손익"),
       chalk.magentaBright("평가금액"),
       chalk.magentaBright("보유수량"),
       chalk.magentaBright("평균매수가"),
-      chalk.magentaBright("변동률"),
-      chalk.magentaBright("변동금액"),
+
       chalk.magentaBright("전일종가"),
       chalk.magentaBright("고가"),
       chalk.magentaBright("저가"),
@@ -265,9 +267,7 @@ function redrawTable(): void {
       return rateB - rateA;
     }
   );
-
-  console.log(sortedSymbols);
-  
+ 
   for (const symbol of sortedSymbols) {
     // Iterate over sorted symbols
     const data: TickerContent = realTimeData[symbol];
@@ -282,9 +282,9 @@ function redrawTable(): void {
     const currentClosePrice: number = parseFloat(data.closePrice);
 
     if (currentClosePrice > prevPrice) {
-      priceColor = chalk.red;
+      priceColor = chalk.green;
     } else if (currentClosePrice < prevPrice) {
-      priceColor = chalk.blue;
+      priceColor = chalk.red;
     }
 
     let rateColor = chalk.white;
@@ -353,13 +353,15 @@ function redrawTable(): void {
       chalk.yellow(`${icon} ${symbol}`),
       priceColor(`${price} KRW`),
       parseFloat(data.volumePower).toFixed(2),
+      rateColor(`${changeRate.toFixed(2)}%`),
+      rateColor(`${changeAmount.toLocaleString("ko-KR")} KRW`),
+
       profitLossColor(profitLossRate),
       profitLossColor(profitLossAmount),
       priceColor(evaluationAmount),
       holdingQuantity,
       priceColor(avgPurchasePrice),
-      rateColor(`${changeRate.toFixed(2)}%`),
-      rateColor(`${changeAmount.toLocaleString("ko-KR")} KRW`),
+
       parseFloat(data.prevClosePrice).toLocaleString("ko-KR"),
       parseFloat(data.highPrice).toLocaleString("ko-KR"),
       parseFloat(data.lowPrice).toLocaleString("ko-KR"),
