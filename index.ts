@@ -284,9 +284,9 @@ function redrawTable(): void {
     const currentClosePrice: number = parseFloat(data.closePrice);
 
     if (currentClosePrice > prevPrice) {
-      priceColor = chalk.green;
+      priceColor = chalk.redBright;
     } else if (currentClosePrice < prevPrice) {
-      priceColor = chalk.red;
+      priceColor = chalk.blueBright;
     }
 
     let rateColor = chalk.white;
