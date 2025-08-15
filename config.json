@@ -21,19 +21,19 @@
     {
       "symbol": "XRP",
       "icon": "✕",
-      "averagePurchasePrice": 4512,
+      "averagePurchasePrice": 0,
       "unit_currency": "KRW"
     },
     {
       "symbol": "DOGE",
       "icon": "Ɖ",
-      "averagePurchasePrice": 327.9,
+      "averagePurchasePrice": 0,
       "unit_currency": "KRW"
     },
     {
       "symbol": "STRK",
       "icon": "⭐",
-      "averagePurchasePrice": 229.7,
+      "averagePurchasePrice": 0,
       "unit_currency": "KRW"
     },
     {
@@ -45,7 +45,7 @@
     {
       "symbol": "TRUMP",
       "icon": "🇺🇸",
-      "averagePurchasePrice": 13967,
+      "averagePurchasePrice": 0,
       "unit_currency": "KRW"
     },
     {
@@ -63,7 +63,7 @@
     {
       "symbol": "ADA",
       "icon": "₳",
-      "averagePurchasePrice": 1290,
+      "averagePurchasePrice": 0,
       "unit_currency": "KRW"
     },
     {

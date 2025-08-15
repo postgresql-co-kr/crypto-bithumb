@@ -364,10 +364,10 @@ function redrawTable(): void {
       profitLossColor(profitLossAmount),
       profitLossColor(profitLossRate),
       holdingQuantity,
-      priceColor(avgPurchasePrice),
+      avgPurchasePrice,
       
       purchaseAmount,
-      priceColor(evaluationAmount),
+      evaluationAmount,
 
       parseFloat(data.prevClosePrice).toLocaleString("ko-KR"),
       parseFloat(data.highPrice).toLocaleString("ko-KR"),
