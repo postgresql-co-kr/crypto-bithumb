@@ -91,26 +91,35 @@ sudo yum install -y nodejs
 ```json
 {
   "coins": [
-    {
-      "symbol": "BTC",
-      "icon": "₿",
-      "averagePurchasePrice": 50000000,
-      "unit_currency": "KRW"
-    },
-    {
-      "symbol": "ETH",
-      "icon": "Ξ",
-      "averagePurchasePrice": 3000000,
-      "unit_currency": "KRW"
-    },
-    {
-      "symbol": "XRP",
-      "icon": "✕",
-      "averagePurchasePrice": 0,
-      "unit_currency": "KRW"
-    }
+    {"symbol": "BTC",   "icon": "₿", "averagePurchasePrice": 80000000, "unit_currency": "KRW"},
+    {"symbol": "ETH",   "icon": "Ξ", "averagePurchasePrice": 1800000, "unit_currency": "KRW"},
+    {"symbol": "USDT",  "icon": "$", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "SOL",   "icon": "◎", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "XRP",   "icon": "✕", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ADA",   "icon": "₳", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "DOT",   "icon": "⚫", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "AVAX",  "icon": "▲", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "LINK",  "icon": "🔗", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "TRX",   "icon": "🔼", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ETC",   "icon": "⟡", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ARB",   "icon": "🔷", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "HBAR",  "icon": "✿", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "WLD",   "icon": "🌐", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    
+    {"symbol": "DOGE",  "icon": "Ɖ", "averagePurchasePrice": 280, "unit_currency": "KRW"},
+    {"symbol": "SHIB",  "icon": "🐶", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "PEPE",  "icon": "🐸", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "BONK",  "icon": "🦴", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "TRUMP", "icon": "🇺🇸", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "PENGU", "icon": "🐧", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    
+    {"symbol": "SUNDOG","icon": "☀️", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "KAIA",  "icon": "✷", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ONDO",  "icon": "💫", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ENS",   "icon": "🔖", "averagePurchasePrice": 0, "unit_currency": "KRW"}
   ]
 }
+
 ```
 -   `symbol`: 코인의 티커 심볼 (예: "BTC", "ETH"). **대문자로 입력해야 합니다.**
 -   `icon`: 코인 이름 옆에 표시될 아이콘 (이모지 등).
