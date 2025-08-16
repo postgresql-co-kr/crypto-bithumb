@@ -1,11 +1,15 @@
 {
-  "name": "@debate300/crypto-bitumb",
+  "name": "@debate300/bithumb-pro",
   "version": "1.0.0",
-  "description": "A real-time cryptocurrency price tracker for Bithumb.",
+  "description": "A real-time cryptocurrency price tracker for Bithumb (Pro).",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "bithumb-pro": "dist/index.js"
+  },
   "files": [
-    "dist"
+    "dist",
+    "config.json-top30"
   ],
   "scripts": {
     "build": "tsc",
@@ -16,7 +20,8 @@
     "crypto",
     "coin",
     "korea",
-    "bithumb"
+    "bithumb",
+    "pro"
   ],
   "author": "debate300",
   "license": "ISC",

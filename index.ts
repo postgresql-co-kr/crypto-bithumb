@@ -1,10 +1,48 @@
+#!/usr/bin/env node
 import WebSocket from "ws";
 import chalk from "chalk";
 import Table from "cli-table3";
 import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 import axios from "axios";
 import * as jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
+
+// Function to ensure config file exists
+function ensureConfigFile() {
+  const homeDir = os.homedir();
+  const configDir = path.join(homeDir, ".debate300");
+  const configFilePath = path.join(configDir, "config.json");
+
+  // 1. Check if ~/.debate300 directory exists, if not create it.
+  if (!fs.existsSync(configDir)) {
+    try {
+      fs.mkdirSync(configDir, { recursive: true });
+    } catch (error) {
+      console.error(chalk.red(`Error creating config directory at ${configDir}:`), error);
+      process.exit(1);
+    }
+  }
+
+  // 2. Check if config.json exists in the directory.
+  if (!fs.existsSync(configFilePath)) {
+    // If not, create it with default content from config.json-top30
+    try {
+      const defaultConfigPath = path.join(__dirname, '..', 'config.json-top30');
+      const defaultConfigContent = fs.readFileSync(defaultConfigPath, "utf8");
+      fs.writeFileSync(configFilePath, defaultConfigContent, "utf8");
+      console.log(chalk.green(`Default config file created at ${configFilePath}`));
+    } catch (error) {
+      console.error(chalk.red(`Error creating default config file:`), error);
+      process.exit(1);
+    }
+  }
+}
+
+// Ensure the config file is in place before doing anything else.
+ensureConfigFile();
+
 
 // 프로그램 시작 시 커서를 숨깁니다.
 process.stdout.write('\x1B[?25l');
@@ -115,32 +153,57 @@ let krwBalance: number = 0;
 let krwLocked: number = 0;
 
 let appConfig: AppConfig;
-let apiConfig: ApiConfig | null = null; // Initialize apiConfig as nullable
+let apiConfig: ApiConfig | null = null;
 
-try {
-  const configPath = "./config.json";
-  const configContent = fs.readFileSync(configPath, "utf8");
-  appConfig = JSON.parse(configContent);
-} catch (error) {
-  console.error(chalk.red("Error loading config.json:"), error);
-  process.exit(1); // Exit if config cannot be loaded
-}
+function loadConfig(): AppConfig {
+  const currentDirConfigPath = path.join(process.cwd(), "config.json");
+  const homeDirConfigPath = path.join(os.homedir(), ".debate300", "config.json");
+  const currentDirApiKeysPath = path.join(process.cwd(), "api_keys.json");
+  const homeDirApiKeysPath = path.join(os.homedir(), ".debate300", "api_keys.json");
 
-// Try to load API keys
-try {
-  const apiConfigPath = "./api_keys.json";
-  const apiConfigContent = fs.readFileSync(apiConfigPath, "utf8");
-  apiConfig = JSON.parse(apiConfigContent);
-  if (!apiConfig?.bithumb_api_key || !apiConfig?.bithumb_secret_key) {
+  let configContent: string | undefined;
+  let configPathUsed: string | undefined;
+
+  if (fs.existsSync(currentDirConfigPath)) {
+    configContent = fs.readFileSync(currentDirConfigPath, "utf8");
+    configPathUsed = currentDirConfigPath;
+  } else if (fs.existsSync(homeDirConfigPath)) {
+    configContent = fs.readFileSync(homeDirConfigPath, "utf8");
+    configPathUsed = homeDirConfigPath;
+  } else {
+    // This part should not be reached if ensureConfigFile works correctly
+    console.error(chalk.red("오류: 'config.json' 파일을 찾을 수 없습니다."));
+    process.exit(1);
+  }
+
+  // Load api_keys.json
+  if (fs.existsSync(currentDirApiKeysPath)) {
+      const apiConfigContent = fs.readFileSync(currentDirApiKeysPath, "utf8");
+      apiConfig = JSON.parse(apiConfigContent);
+  } else if (fs.existsSync(homeDirApiKeysPath)) {
+      const apiConfigContent = fs.readFileSync(homeDirApiKeysPath, "utf8");
+      apiConfig = JSON.parse(apiConfigContent);
+  }
+
+  if (apiConfig && (!apiConfig?.bithumb_api_key || !apiConfig?.bithumb_secret_key)) {
     console.warn(chalk.yellow("Warning: api_keys.json contains placeholder API keys. Please update them for API functionality."));
     apiConfig = null; // Treat as no API keys if placeholders are present
-  } else {
+  } else if (apiConfig) {
     console.log(chalk.green("API keys loaded successfully. Attempting to fetch user holdings from Bithumb API."));
+  } else {
+    console.log(chalk.yellow("api_keys.json not found or could not be loaded. Proceeding with config.json only."));
   }
-} catch (error) {
-  console.log(chalk.yellow("api_keys.json not found or could not be loaded. Proceeding with config.json only."));
-  apiConfig = null;
+
+  try {
+    return JSON.parse(configContent);
+  } catch (error) {
+    console.error(chalk.red(`오류: '${configPathUsed}' 파일의 형식이 올바르지 않습니다. JSON 파싱 오류:`), error);
+    process.exit(1);
+  }
 }
+
+appConfig = loadConfig();
+
 
 // Populate iconMap after appConfig is loaded
 appConfig.coins.forEach((coin) => {
