@@ -3,7 +3,8 @@ import chalk from "chalk";
 import Table from "cli-table3";
 import * as fs from "fs";
 import axios from "axios";
-
+import * as jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
 
 // 프로그램 시작 시 커서를 숨깁니다.
 process.stdout.write('\x1B[?25l');
