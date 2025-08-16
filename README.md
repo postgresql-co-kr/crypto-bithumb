@@ -53,6 +53,18 @@
 
 `api_keys.json`을 사용하면 보유한 코인은 자동으로 목록에 추가되므로, 이 파일에는 **보유하고 있지 않지만 시세를 추적하고 싶은 코인**만 추가하면 됩니다.
 
+원하는 코인 목록으로 변경하려면 아래와 같이 `coins` 배열을 수정하세요. (예: 비트코인, 이더리움, 리플만 추적)
+
+```json
+{
+  "coins": [
+    {"symbol": "BTC", "icon": "₿", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ETH", "icon": "Ξ", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "XRP", "icon": "✕", "averagePurchasePrice": 0, "unit_currency": "KRW"}
+  ]
+}
+```
+
 ### 4. 실행
 
 모든 설정이 완료되면 터미널에 다음 명령어를 입력하여 바로 실행할 수 있습니다.
