@@ -2,6 +2,62 @@
 
 빗썸 거래소의 암호화폐 시세를 터미널에 실시간으로 표시하는 커맨드 라인 인터페이스(CLI) 애플리케이션입니다.
 
+## 간편 설치 가이드 (Quick Start)
+
+터미널 사용에 익숙한 분들을 위한 빠른 설치 과정입니다.
+
+1.  **Node.js 설치**: [Node.js 공식 웹사이트](https://nodejs.org/ko/download)에서 LTS 버전을 다운로드하여 설치합니다. 이미 설치되어 있다면 이 단계를 건너뛰세요.
+
+2.  **패키지 전역 설치**: 터미널을 열고 다음 명령어를 실행하여 패키지를 전역으로 설치합니다.
+    ```bash
+    npm install -g @debate300/bithumb
+    ```
+
+3.  **`config.json` 파일 준비**:
+    추적하고 싶은 코인 목록을 담은 `config.json` 파일을 생성해야 합니다.
+    아래 두 위치 중 한 곳에 파일을 위치시키세요.
+    *   **홈 디렉토리**: `~/.debate300/config.json` (macOS/Linux) 또는 `C:\Users\YOUR_USERNAME\.debate300\config.json` (Windows)
+    *   **현재 작업 디렉토리**: `debate300` 명령어를 실행할 폴더
+
+    **팁**: 아래 내용 복사 
+```json
+{
+  "coins": [
+    {"symbol": "BTC",   "icon": "₿", "averagePurchasePrice": 80000000, "unit_currency": "KRW"},
+    {"symbol": "ETH",   "icon": "Ξ", "averagePurchasePrice": 1800000, "unit_currency": "KRW"},
+    {"symbol": "USDT",  "icon": "$", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "SOL",   "icon": "◎", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "XRP",   "icon": "✕", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ADA",   "icon": "₳", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "DOT",   "icon": "⚫", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "AVAX",  "icon": "▲", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "LINK",  "icon": "🔗", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "TRX",   "icon": "🔼", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ETC",   "icon": "⟡", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ARB",   "icon": "🔷", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "HBAR",  "icon": "✿", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "WLD",   "icon": "🌐", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    
+    {"symbol": "DOGE",  "icon": "Ɖ", "averagePurchasePrice": 280, "unit_currency": "KRW"},
+    {"symbol": "SHIB",  "icon": "🐶", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "PEPE",  "icon": "🐸", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "BONK",  "icon": "🦴", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "TRUMP", "icon": "🇺🇸", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "PENGU", "icon": "🐧", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    
+    {"symbol": "SUNDOG","icon": "☀️", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "KAIA",  "icon": "✷", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ONDO",  "icon": "💫", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ENS",   "icon": "🔖", "averagePurchasePrice": 0, "unit_currency": "KRW"}
+  ]
+}
+```
+
+4.  **실행**: 터미널에 다음 명령어를 입력하여 애플리케이션을 실행합니다.
+    ```bash
+    debate300
+    ```
+
 ## 주요 기능
 
 -   **실시간 시세 추적**: 웹소켓을 통해 빗썸의 암호화폐 데이터를 실시간으로 가져와 표시합니다.
@@ -91,32 +147,24 @@ sudo yum install -y nodejs
 ```json
 {
   "coins": [
-    {"symbol": "BTC",   "icon": "₿", "averagePurchasePrice": 80000000, "unit_currency": "KRW"},
-    {"symbol": "ETH",   "icon": "Ξ", "averagePurchasePrice": 1800000, "unit_currency": "KRW"},
-    {"symbol": "USDT",  "icon": "$", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "SOL",   "icon": "◎", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "XRP",   "icon": "✕", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "ADA",   "icon": "₳", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "DOT",   "icon": "⚫", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "AVAX",  "icon": "▲", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "LINK",  "icon": "🔗", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "TRX",   "icon": "🔼", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "ETC",   "icon": "⟡", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "ARB",   "icon": "🔷", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "HBAR",  "icon": "✿", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "WLD",   "icon": "🌐", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    
-    {"symbol": "DOGE",  "icon": "Ɖ", "averagePurchasePrice": 280, "unit_currency": "KRW"},
-    {"symbol": "SHIB",  "icon": "🐶", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "PEPE",  "icon": "🐸", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "BONK",  "icon": "🦴", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "TRUMP", "icon": "🇺🇸", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "PENGU", "icon": "🐧", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    
-    {"symbol": "SUNDOG","icon": "☀️", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "KAIA",  "icon": "✷", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "ONDO",  "icon": "💫", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "ENS",   "icon": "🔖", "averagePurchasePrice": 0, "unit_currency": "KRW"}
+    {
+      "symbol": "BTC",  
+      "icon": "₿", 
+      "averagePurchasePrice": 80000000, 
+      "unit_currency": "KRW"
+    },
+    {
+      "symbol": "ETH",   
+      "icon": "Ξ", 
+      "averagePurchasePrice": 1800000, 
+      "unit_currency": "KRW"
+    },
+    {
+      "symbol": "USDT",  
+      "icon": "$", 
+      "averagePurchasePrice": 0, 
+      "unit_currency": "KRW"
+    }
   ]
 }
 
