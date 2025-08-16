@@ -302,10 +302,12 @@ function schedulePeriodicUpdates() {
 
 // Bithumb WebSocket URL
 const wsUri: string = "wss://pubwss.bithumb.com/pub/ws";
+let ws: WebSocket | null = null;
 
 // 실시간 시세 데이터를 저장할 객체
 const realTimeData: RealTimeData = {};
 let redrawTimeout: NodeJS.Timeout | null = null;
+const RECONNECT_INTERVAL = 5000; // 5 seconds
 
 // 콘솔을 지우고 테이블을 다시 그리는 함수
 function redrawTable(): void {
@@ -600,7 +602,12 @@ function redrawTable(): void {
 }
 
 function connect(): void {
-  const ws: WebSocket = new WebSocket(wsUri);
+  // Prevent multiple connection attempts if one is already connecting or open
+  if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+    return;
+  }
+
+  ws = new WebSocket(wsUri);
 
   ws.on("open", () => {
     console.log(chalk.green("Bithumb WebSocket에 연결되었습니다."));
@@ -611,7 +618,9 @@ function connect(): void {
       symbols: symbols,
       tickTypes: ["MID"], // 자정 기준 변동률
     };
-    ws.send(JSON.stringify(subscribeMsg));
+    if (ws) { // Add null check here
+      ws.send(JSON.stringify(subscribeMsg));
+    }
   });
 
   ws.on("message", (data: WebSocket.RawData) => {
@@ -650,9 +659,14 @@ function connect(): void {
 
   ws.on("close", () => {
     console.log(
-      chalk.yellow("WebSocket 연결이 종료되었습니다. 5초 후 재연결합니다.")
+      chalk.yellow("WebSocket 연결이 종료되었습니다. 재연결을 시도합니다.")
     );
-    setTimeout(connect, 5000);
+    ws = null;
+    if (redrawTimeout) { // Clear redrawTimeout on close
+      clearTimeout(redrawTimeout);
+      redrawTimeout = null;
+    }
+    setTimeout(connect, RECONNECT_INTERVAL); // Reconnect after a delay
   });
 }
 
