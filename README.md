@@ -18,7 +18,20 @@
     *   **파일 위치**: `~/.debate300/config.json` (macOS/Linux) 또는 `C:\Users\YOUR_USERNAME\.debate300\config.json` (Windows)
     *   **기본 설정**: 시가총액 상위 30개 코인이 기본으로 포함되어 있습니다.
 
-    **원하는 코인 목록으로 변경하려면** 이 파일을 직접 열어 `coins` 배열을 수정하세요. `symbol`(코인 심볼), `icon`(아이콘), `averagePurchasePrice`(평균 매수 단가)를 자유롭게 변경, 추가 또는 삭제할 수 있습니다.
+    **원하는 코인 목록으로 변경하려면** 이 파일을 직접 열어 `coins` 배열을 아래와 같이 수정하세요.
+
+    **예시 `config.json`:**
+    ```json
+    {
+      "coins": [
+        { "symbol": "BTC", "icon": "₿", "averagePurchasePrice": 90000000, "unit_currency": "KRW" },
+        { "symbol": "ETH", "icon": "Ξ", "averagePurchasePrice": 4600000, "unit_currency": "KRW" },
+        { "symbol": "XRP", "icon": "✕", "averagePurchasePrice": 0, "unit_currency": "KRW" }
+      ]
+    }
+    ```
+
+    `symbol`(코인 심볼), `icon`(아이콘), `averagePurchasePrice`(평균 매수 단가), `unit_currency`(기준 통화)를 자유롭게 변경, 추가 또는 삭제할 수 있습니다.
 
     **참고**: 현재 작업 디렉토리에 `config.json` 파일을 두면, 홈 디렉토리의 설정보다 우선적으로 사용됩니다.
 
@@ -106,21 +119,46 @@ sudo yum install -y nodejs
 
 ### 1. `config.json` 파일 설정
 
-`@debate300/bithumb`은 `config.json` 파일을 통해 어떤 코인을 추적할지 결정합니다.
+`@debate300/bithumb`은 `config.json` 파일을 통해 추적할 코인을 설정합니다.
 
-**자동 생성**: 처음 프로그램을 실행하면, 가장 인기 있는 30개 코인이 포함된 `config.json` 파일이 다음 위치에 자동으로 생성됩니다.
-*   `~/.debate300/config.json` (macOS/Linux)
-*   `C:\Users\YOUR_USERNAME\.debate300\config.json` (Windows)
+**자동 생성 및 위치**:
+처음 실행 시, 시가총액 상위 30개 코인이 포함된 `config.json` 파일이 아래 경로에 자동으로 생성됩니다.
+*   **macOS/Linux**: `~/.debate300/config.json`
+*   **Windows**: `C:\Users\YOUR_USERNAME\.debate300\config.json`
 
-**설정 변경**:
-추적할 코인 목록을 변경하고 싶다면, 위에 안내된 경로의 `config.json` 파일을 텍스트 편집기로 열어 수정하면 됩니다.
+**직접 설정 및 샘플**:
+필요시, 아래 샘플과 같이 `config.json` 파일을 직접 생성하거나 자동 생성된 파일을 수정하여 원하는 코인을 추적할 수 있습니다. 현재 작업 디렉토리에 `config.json`이 있으면 전역 설정보다 우선 적용됩니다.
 
--   `symbol`: 코인의 티커 심볼 (예: "BTC", "ETH"). **대문자로 입력해야 합니다.**
--   `icon`: 코인 이름 옆에 표시될 아이콘 (이모지 등).
--   `averagePurchasePrice`: 사용자의 평균 매수 단가 (숫자). 이 값을 기준으로 수익률이 계산됩니다. 수익률을 보고 싶지 않다면 `0`으로 설정하세요.
--   `unit_currency`: 기준 통화. 현재는 `"KRW"`만 지원합니다.
+**샘플 `config.json`:**
+```json
+{
+  "coins": [
+    {
+      "symbol": "BTC",
+      "icon": "₿",
+      "averagePurchasePrice": 90000000,
+      "unit_currency": "KRW"
+    },
+    {
+      "symbol": "ETH",
+      "icon": "Ξ",
+      "averagePurchasePrice": 4600000,
+      "unit_currency": "KRW"
+    },
+    {
+      "symbol": "XRP",
+      "icon": "✕",
+      "averagePurchasePrice": 0,
+      "unit_currency": "KRW"
+    }
+  ]
+}
+```
 
-**팁**: 만약 특정 프로젝트 폴더에서만 다른 코인 목록을 사용하고 싶다면, 해당 폴더에 별도의 `config.json` 파일을 두면 그 설정을 우선적으로 읽어옵니다.
+-   `symbol`: **(필수)** 코인 심볼 (대문자, 예: "BTC")
+-   `icon`: 표시될 아이콘 (이모지 등)
+-   `averagePurchasePrice`: 평균 매수 단가. 수익률 계산에 사용되며, 원치 않으면 `0`으로 설정합니다.
+-   `unit_currency`: 기준 통화 (현재 "KRW"만 지원)
 
 
 ### 2. 애플리케이션 실행
