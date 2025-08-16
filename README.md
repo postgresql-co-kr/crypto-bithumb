@@ -1,8 +1,8 @@
-# 빗썸 실시간 암호화폐 시세 표시기 (`pro` 브랜치)
+# 빗썸 실시간 암호화폐 시세 표시기 (Pro)
 
-빗썸 거래소의 암호화폐 시세를 터미널에 실시간으로 표시하는 커맨드 라인 인터페이스(CLI) 애플리케이션입니다. `pro` 브랜치는 빗썸 API 키와 연동하여 사용자의 실제 자산 현황을 포함한 상세 정보를 제공하는 전문가용 버전입니다.
+빗썸 거래소의 암호화폐 시세를 터미널에 실시간으로 표시하는 커맨드 라인 인터페이스(CLI) 애플리케이션입니다. `pro` 버전은 빗썸 API 키와 연동하여 사용자의 실제 자산 현황을 포함한 상세 정보를 제공하는 전문가용 버전입니다.
 
-## `pro` 브랜치 주요 기능
+## `pro` 버전 주요 기능
 
 -   **모든 `main` 브랜치 기능 포함**: 실시간 시세 추적, 한글 코인 이름, 수익률 계산, 시장 분위기 분석 등 기본 기능을 모두 포함합니다.
 -   **자동 포트폴리오 연동**: 빗썸 계좌에 보유한 모든 암호화폐 자산을 자동으로 가져와 시세와 함께 표시합니다.
@@ -12,96 +12,61 @@
 
 ---
 
-## 설치 및 실행 방법
+## 설치 및 실행
 
-### 1. 개발 환경 설정 (최초 1회)
+### 1. 사전 요구사항: Node.js 설치
 
-이 애플리케이션을 실행하기 위해 필요한 `Git`, `Node.js`, `pnpm`을 먼저 설치해야 합니다.
+이 애플리케이션을 실행하려면 [Node.js](https://nodejs.org/) (버전 18.x 이상 권장)가 시스템에 설치되어 있어야 합니다. Node.js를 설치하면 `npm`과 `npx`가 함께 설치됩니다.
 
-#### Git 설치
+[Node.js 공식 웹사이트](https://nodejs.org/ko/download)에서 사용 중인 운영체제에 맞는 LTS 버전을 다운로드하여 설치하세요.
 
--   **Windows**: [Git for Windows](https://git-scm.com/download/win)를 다운로드하여 설치합니다.
--   **macOS**: 터미널에서 `xcode-select --install` 명령어를 실행합니다.
--   **Linux (Debian/Ubuntu)**: `sudo apt-get update && sudo apt-get install git` 명령어를 실행합니다.
+### 2. API 키 설정: `api_keys.json` (가장 중요)
 
-#### Node.js 설치 (v16 이상 권장)
+`pro` 버전의 핵심 기능인 자동 자산 연동을 위해 API 키가 반드시 필요합니다.
 
--   `nvm`(Node Version Manager)을 사용하여 설치하는 것을 권장합니다.
-    1.  `nvm` 설치: `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash`
-    2.  터미널 재시작 후 Node.js LTS 버전 설치: `nvm install --lts && nvm use --lts`
+**프로그램을 처음 실행하면, `~/.debate300/` 폴더에 `api_keys.json` 파일이 자동으로 생성됩니다.**
 
-#### pnpm 설치
+프로그램을 사용하기 전에, 이 파일을 열어 빗썸에서 발급받은 실제 API 키를 입력해야 합니다.
 
--   `npm install -g pnpm` 명령어를 실행하여 `pnpm`을 전역으로 설치합니다.
-
-### 2. 프로젝트 설정
-
-1.  **저장소 복제 및 브랜치 전환:**
-    ```bash
-    git clone https://github.com/postgresql-co-kr/crypto-bithumb.git
-    cd crypto-bithumb
-    git checkout pro # pro 브랜치로 전환
-    ```
-
-2.  **의존성 설치:**
-    프로젝트 폴더로 이동한 후, 필요한 라이브러리를 설치합니다.
-    ```bash
-    pnpm install
-    ```
-
-3.  **`api_keys.json` 파일 설정 (가장 중요):**
-    `pro` 브랜치의 핵심 기능인 자산 연동을 위해, 빗썸에서 발급받은 API 키를 입력해야 합니다. 프로젝트 루트 디렉터리에 `api_keys.json` 파일을 직접 생성하고 아래와 같이 내용을 입력하세요.
-
+-   **파일 위치**: `~/.debate300/api_keys.json` (macOS/Linux) 또는 `C:\Users\YOUR_USERNAME\.debate300\api_keys.json` (Windows)
+-   **파일 내용 (수정 필요)**:
     ```json
     {
       "bithumb_api_key": "YOUR_CONNECT_KEY",
       "bithumb_secret_key": "YOUR_SECRET_KEY"
     }
     ```
-    -   `YOUR_CONNECT_KEY`와 `YOUR_SECRET_KEY`를 실제 발급받은 키로 교체해야 합니다.
+**참고:** API 키가 설정되지 않은 상태로 프로그램을 실행하면, 키를 입력하라는 에러 메시지가 표시되고 프로그램이 종료됩니다.
 
-    **API 키 발급 방법:**
-    1.  [빗썸 API 관리 페이지](https://www.bithumb.com/react/api-support/management-api)로 직접 이동하거나, 빗썸 로그인 후 **더보기 > API 관리** 메뉴로 이동합니다.
-    2.  **API Key 생성** 버튼을 누릅니다.
-    3.  **API 버전 및 권한 설정:**
-        -   **API 2.0**을 선택합니다.
-        -   **API 활성 항목 선택**에서 **`자산 조회`** 권한만 체크합니다. 이 프로그램은 사용자의 보유 자산 정보를 읽어오는 기능만 필요로 하므로, 보안을 위해 다른 모든 권한(거래 주문, 입출금 등)은 반드시 해제해주세요.
-    4.  **IP 주소 설정:**
-        -   **팁:** IP 주소는 특정 IP에서만 API를 사용하도록 제한하는 보안 기능입니다. 현재 사용 중인 PC의 IP를 입력해야 합니다. 
-        -   PC 로 빗썸 로그인시 카카오/SMS 로 접속 IP 알림을 참조 하세요.
-    5.  보안 인증(ARS 또는 OTP)을 완료하면 `API Key`와 `Secret Key`가 발급됩니다.
-    6.  **키 저장:** **`Secret Key`는 이 페이지를 벗어나면 다시 볼 수 없으므로, 반드시 안전한 곳에 즉시 복사하여 보관**하세요.
+#### API 키 발급 방법
 
-4.  **`config.json` 파일 설정:**
-    `api_keys.json`을 사용하면 보유한 코인은 자동으로 목록에 추가됩니다. `config.json`에는 **보유하고 있지 않지만 시세를 추적하고 싶은 코인**을 추가할 수 있습니다.
+1.  [빗썸 API 관리](https://www.bithumb.com/react/api-support/management-api) 페이지로 이동합니다.
+2.  **`자산 조회`** 권한만 체크하여 API 키를 생성합니다. **보안을 위해 다른 모든 권한은 반드시 해제하세요.**
+3.  **`Secret Key`는 발급 시 한 번만 표시되므로, 즉시 안전한 곳에 복사**해두세요.
 
-    ```json
-    {
-      "coins": [
-        {
-          "symbol": "WLD",
-          "icon": "🌐",
-          "averagePurchasePrice": 0,
-          "unit_currency": "KRW"
-        }
-      ]
-    }
-    ```
-    -   `averagePurchasePrice`를 `0`으로 설정하면, 보유하지 않은 코인이므로 수익률은 표시되지 않습니다.
+### 3. 코인 목록 설정: `config.json` (선택 사항)
 
-### 3. 실행
+프로그램을 처음 실행하면, 시가총액 상위 30개 코인이 포함된 `config.json` 파일이 `~/.debate300/` 폴더에 자동으로 생성됩니다.
 
-1.  **애플리케이션 빌드:**
+`api_keys.json`을 사용하면 보유한 코인은 자동으로 목록에 추가되므로, 이 파일에는 **보유하고 있지 않지만 시세를 추적하고 싶은 코인**만 추가하면 됩니다.
+
+### 4. 실행
+
+모든 설정이 완료되면 터미널에 다음 명령어를 입력하여 바로 실행할 수 있습니다.
+
+-   **`npx`로 실행 (권장):**
     ```bash
-    pnpm build
+    npx @debate300/bithumb-pro
     ```
-
-2.  **애플리케이션 실행:**
+-   **전역 설치 후 실행:**
     ```bash
-    node dist/index.js
+    npm install -g @debate300/bithumb-pro
+    debate300-pro
     ```
 
-#### 실행 옵션
+---
+
+## 실행 옵션
 
 -   `--sort-by`: 정렬 기준을 선택합니다.
     -   `my` (**`pro` 브랜치 기본값**): 보유 코인을 평가금액이 높은 순으로 정렬합니다.

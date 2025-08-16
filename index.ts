@@ -158,9 +158,38 @@ let apiConfig: ApiConfig | null = null;
 function loadConfig(): AppConfig {
   const currentDirConfigPath = path.join(process.cwd(), "config.json");
   const homeDirConfigPath = path.join(os.homedir(), ".debate300", "config.json");
-  const currentDirApiKeysPath = path.join(process.cwd(), "api_keys.json");
   const homeDirApiKeysPath = path.join(os.homedir(), ".debate300", "api_keys.json");
 
+  // Check for api_keys.json and handle it first
+  if (!fs.existsSync(homeDirApiKeysPath)) {
+    const defaultApiKeys = {
+      bithumb_api_key: "YOUR_CONNECT_KEY",
+      bithumb_secret_key: "YOUR_SECRET_KEY",
+    };
+    fs.writeFileSync(homeDirApiKeysPath, JSON.stringify(defaultApiKeys, null, 2), "utf8");
+    console.error(chalk.red("API 키 파일이 없어 기본 파일을 생성했습니다."));
+    console.error(chalk.yellow(`파일 위치: ${homeDirApiKeysPath}`));
+    console.error(chalk.yellow("파일을 열어 본인의 빗썸 API 키를 입력해주세요."));
+    console.error(chalk.yellow("API 키 발급은 README.md 파일을 참고하세요."));
+    process.exit(1);
+  }
+
+  const apiConfigContent = fs.readFileSync(homeDirApiKeysPath, "utf8");
+  apiConfig = JSON.parse(apiConfigContent);
+
+  if (
+    !apiConfig ||
+    apiConfig.bithumb_api_key === "YOUR_CONNECT_KEY" ||
+    apiConfig.bithumb_secret_key === "YOUR_SECRET_KEY"
+  ) {
+    console.error(chalk.red("빗썸 API 키가 설정되지 않았습니다."));
+    console.error(chalk.yellow(`파일 위치: ${homeDirApiKeysPath}`));
+    console.error(chalk.yellow("파일을 열어 본인의 빗썸 API 키를 입력해주세요."));
+    console.error(chalk.yellow("API 키 발급은 README.md 파일을 참고하세요."));
+    process.exit(1);
+  }
+
+  // Proceed with loading config.json
   let configContent: string | undefined;
   let configPathUsed: string | undefined;
 
@@ -175,24 +204,8 @@ function loadConfig(): AppConfig {
     console.error(chalk.red("오류: 'config.json' 파일을 찾을 수 없습니다."));
     process.exit(1);
   }
-
-  // Load api_keys.json
-  if (fs.existsSync(currentDirApiKeysPath)) {
-      const apiConfigContent = fs.readFileSync(currentDirApiKeysPath, "utf8");
-      apiConfig = JSON.parse(apiConfigContent);
-  } else if (fs.existsSync(homeDirApiKeysPath)) {
-      const apiConfigContent = fs.readFileSync(homeDirApiKeysPath, "utf8");
-      apiConfig = JSON.parse(apiConfigContent);
-  }
-
-  if (apiConfig && (!apiConfig?.bithumb_api_key || !apiConfig?.bithumb_secret_key)) {
-    console.warn(chalk.yellow("Warning: api_keys.json contains placeholder API keys. Please update them for API functionality."));
-    apiConfig = null; // Treat as no API keys if placeholders are present
-  } else if (apiConfig) {
-    console.log(chalk.green("API keys loaded successfully. Attempting to fetch user holdings from Bithumb API."));
-  } else {
-    console.log(chalk.yellow("api_keys.json not found or could not be loaded. Proceeding with config.json only."));
-  }
+  
+  console.log(chalk.green("API keys loaded successfully. Attempting to fetch user holdings from Bithumb API."));
 
   try {
     return JSON.parse(configContent);
