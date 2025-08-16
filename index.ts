@@ -7,6 +7,41 @@ import * as os from "os";
 import * as path from "path";
 import axios from "axios";
 
+// Function to ensure config file exists
+function ensureConfigFile() {
+  const homeDir = os.homedir();
+  const configDir = path.join(homeDir, ".debate300");
+  const configFilePath = path.join(configDir, "config.json");
+
+  // 1. Check if ~/.debate300 directory exists, if not create it.
+  if (!fs.existsSync(configDir)) {
+    try {
+      fs.mkdirSync(configDir, { recursive: true });
+    } catch (error) {
+      console.error(chalk.red(`Error creating config directory at ${configDir}:`), error);
+      process.exit(1);
+    }
+  }
+
+  // 2. Check if config.json exists in the directory.
+  if (!fs.existsSync(configFilePath)) {
+    // If not, create it with default content from config.json-top30
+    try {
+      const defaultConfigPath = path.join(__dirname, '..', 'config.json-top30');
+      const defaultConfigContent = fs.readFileSync(defaultConfigPath, "utf8");
+      fs.writeFileSync(configFilePath, defaultConfigContent, "utf8");
+      console.log(chalk.green(`Default config file created at ${configFilePath}`));
+    } catch (error) {
+      console.error(chalk.red(`Error creating default config file:`), error);
+      process.exit(1);
+    }
+  }
+}
+
+// Ensure the config file is in place before doing anything else.
+ensureConfigFile();
+
+
 // 커맨드 라인 인수 처리
 const args = process.argv.slice(2);
 let sortBy = 'rate'; // 기본 정렬: 변동률
@@ -312,7 +347,7 @@ function redrawTable(): void {
     sentimentColor = chalk.gray;
   }
 
-  // 콘솔 지우고 테이블 출력 (깜빡임 방지)
+  // 콘솔을 지우고 테이블 출력 (깜빡임 방지)
   process.stdout.write('\x1B[2J\x1B[H');
   console.log(chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit) - Debate300.com"));
   console.log(sentimentColor(marketSentiment)); // Display market sentiment
@@ -385,3 +420,9 @@ async function start() {
 
 // 프로그램 시작
 start();
+
+// Graceful shutdown
+process.on("SIGINT", () => {
+  console.log(chalk.blue("\n프로그램을 종료합니다."));
+  process.exit(0);
+});
