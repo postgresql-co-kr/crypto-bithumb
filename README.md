@@ -13,6 +13,68 @@
 
 ---
 
+## 사전 요구사항 (Prerequisites)
+
+이 애플리케이션을 실행하려면 [Node.js](https://nodejs.org/) (버전 18.x 이상 권장)가 시스템에 설치되어 있어야 합니다. Node.js를 설치하면 `npm`과 `npx`가 함께 설치됩니다.
+
+아래에서 사용 중인 운영체제에 맞는 가장 쉬운 설치 방법을 확인하세요.
+
+### Windows
+
+[Node.js 공식 웹사이트](https://nodejs.org/ko/download)에서 Windows용 LTS 버전 설치 프로그램을 다운로드하여 설치하는 것이 가장 쉽습니다.
+
+또는, [Chocolatey](https://chocolatey.org/) 패키지 관리자를 사용할 수 있습니다.
+
+```powershell
+# Chocolatey가 설치되어 있지 않다면 먼저 설치합니다.
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Chocolatey를 이용해 Node.js를 설치합니다.
+choco install nodejs-lts
+```
+
+### macOS
+
+[Homebrew](https://brew.sh/)를 사용하는 것이 가장 간편합니다.
+
+```bash
+# Homebrew가 설치되어 있지 않다면 먼저 설치합니다.
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Homebrew를 이용해 Node.js를 설치합니다.
+brew install node
+```
+
+또는, Node.js 버전 관리자인 `nvm`을 설치하여 사용하는 것을 권장합니다.
+
+```bash
+# nvm 설치 스크립트를 실행합니다.
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# nvm을 사용하여 Node.js 최신 LTS 버전을 설치합니다.
+nvm install --lts
+```
+
+### Linux
+
+대부분의 Linux 배포판에서는 패키지 관리자를 통해 Node.js를 설치할 수 있습니다. 하지만 최신 버전을 사용하기 위해 [NodeSource](https://github.com/nodesource/distributions) 저장소를 추가하는 것이 좋습니다.
+
+**Debian/Ubuntu 기반 시스템:**
+```bash
+# NodeSource 저장소를 추가하고 Node.js를 설치합니다.
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+**Fedora/RHEL/CentOS 기반 시스템:**
+```bash
+# NodeSource 저장소를 추가하고 Node.js를 설치합니다.
+curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
+sudo yum install -y nodejs
+```
+
+---
+
 ## 시작하기 (초보자용)
 
 이 애플리케이션은 `npx` 또는 전역 설치를 통해 쉽게 실행할 수 있습니다.
@@ -66,7 +128,7 @@
 `npx`는 패키지를 전역으로 설치하지 않고도 실행할 수 있게 해주는 도구입니다. Node.js가 설치되어 있다면 바로 사용할 수 있습니다.
 
 ```bash
-npx @debate300/crypto-bitumb
+npx @debate300/bithumb
 ```
 
 #### 전역 설치 후 실행
@@ -74,7 +136,7 @@ npx @debate300/crypto-bitumb
 `debate300` 명령어를 터미널 어디서든 사용하고 싶다면, 전역으로 설치할 수 있습니다.
 
 ```bash
-npm install -g @debate300/crypto-bitumb
+npm install -g @debate300/bithumb
 ```
 
 설치 후에는 다음 명령어로 실행하세요:
@@ -92,13 +154,13 @@ debate300
 -   `--sort-by`: 정렬 기준을 선택합니다.
     -   `rate` (기본값): 등락률 기준 내림차순 정렬.
         ```bash
-        npx @debate300/crypto-bitumb --sort-by rate
+        npx @debate300/bithumb --sort-by rate
         # 또는 전역 설치 시:
         # debate300 --sort-by rate
         ```
     -   `name`: 코인 이름(심볼) 기준 오름차순 정렬.
         ```bash
-        npx @debate300/crypto-bitumb --sort-by name
+        npx @debate300/bithumb --sort-by name
         # 또는 전역 설치 시:
         # debate300 --sort-by name
         ```
@@ -106,14 +168,14 @@ debate300
 -   `--limit`: 표시할 코인의 최대 개수를 지정합니다.
     -   예시: 상위 10개만 표시
         ```bash
-        npx @debate300/crypto-bitumb --limit 10
+        npx @debate300/bithumb --limit 10
         # 또는 전역 설치 시:
         # debate300 --limit 10
         ```
 
 -   **옵션 조합:**
     ```bash
-    npx @debate300/crypto-bitumb --sort-by name --limit 15
+    npx @debate300/bithumb --sort-by name --limit 15
     # 또는 전역 설치 시:
     # debate300 --sort-by name --limit 15
     ```
