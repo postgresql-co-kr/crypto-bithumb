@@ -11,8 +11,10 @@
     {"symbol": "LINK",  "icon": "🔗", "averagePurchasePrice": 0, "unit_currency": "KRW"},
     {"symbol": "TRX",   "icon": "🔼", "averagePurchasePrice": 0, "unit_currency": "KRW"},
     {"symbol": "ETC",   "icon": "⟡", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "ARB",   "icon": "🔷", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "XLM",   "icon": "✴", "averagePurchasePrice": 0, "unit_currency": "KRW"},
     {"symbol": "HBAR",  "icon": "✿", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ARB",   "icon": "🔷", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "SEI",   "icon": "⚡", "averagePurchasePrice": 0, "unit_currency": "KRW"},
     {"symbol": "WLD",   "icon": "🌐", "averagePurchasePrice": 0, "unit_currency": "KRW"},
     
     {"symbol": "DOGE",  "icon": "Ɖ", "averagePurchasePrice": 0, "unit_currency": "KRW"},
@@ -22,10 +24,25 @@
     {"symbol": "TRUMP", "icon": "🇺🇸", "averagePurchasePrice": 0, "unit_currency": "KRW"},
     {"symbol": "PENGU", "icon": "🐧", "averagePurchasePrice": 0, "unit_currency": "KRW"},
     
-    {"symbol": "SUNDOG","icon": "☀️", "averagePurchasePrice": 0, "unit_currency": "KRW"},
     {"symbol": "KAIA",  "icon": "✷", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ORDER", "icon": "⚙", "averagePurchasePrice": 0, "unit_currency": "KRW"},
     {"symbol": "ONDO",  "icon": "💫", "averagePurchasePrice": 0, "unit_currency": "KRW"},
-    {"symbol": "ENS",   "icon": "🔖", "averagePurchasePrice": 0, "unit_currency": "KRW"}
+    {"symbol": "SOON",  "icon": "⌛", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "FITFI", "icon": "🚶", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ENS",   "icon": "🔖", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "BERA",  "icon": "🐉", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ETHFI", "icon": "Ξ", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "PENDLE","icon": "💳", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "SPK",   "icon": "✨", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "BRETT", "icon": "✷", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "VIRTUAL","icon": "💻", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    
+    {"symbol": "SUNDOG","icon": "☀️", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "RAY",   "icon": "⚡", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "SWELL", "icon": "🌊", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "MOC",   "icon": "🌿", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "FIDA",  "icon": "❐", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "ERA",   "icon": "🌋", "averagePurchasePrice": 0, "unit_currency": "KRW"},
+    {"symbol": "USDC",  "icon": "$", "averagePurchasePrice": 0, "unit_currency": "KRW"}
   ]
 }
-

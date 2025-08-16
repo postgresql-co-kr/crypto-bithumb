@@ -11,6 +11,8 @@ import { config } from "process";
 // 커맨드 라인 인수 처리
 const args = process.argv.slice(2);
 let sortBy = 'rate'; // 기본 정렬: 변동률
+let displayLimit = 30; // 기본 표시 갯수
+
 const sortByArgIndex = args.indexOf('--sort-by');
 if (sortByArgIndex > -1 && args[sortByArgIndex + 1]) {
     const sortArg = args[sortByArgIndex + 1];
@@ -19,6 +21,16 @@ if (sortByArgIndex > -1 && args[sortByArgIndex + 1]) {
         sortBy = sortArg;
     } else {
         console.log(chalk.yellow(`Warning: Invalid sort option '${sortArg}'. Defaulting to 'rate'.`));
+    }
+}
+
+const limitArgIndex = args.indexOf('--limit');
+if (limitArgIndex > -1 && args[limitArgIndex + 1]) {
+    const limitArg = parseInt(args[limitArgIndex + 1], 10);
+    if (!isNaN(limitArg) && limitArg > 0) {
+        displayLimit = limitArg;
+    } else {
+        console.log(chalk.yellow(`Warning: Invalid limit option '${args[limitArgIndex + 1]}'. Using default of ${displayLimit}.`));
     }
 }
 
@@ -283,38 +295,83 @@ function redrawTable(): void {
     colWidths: [15, 18, 10, 15, 10, 15, 10, 12, 18, 18, 18, 15, 15, 15],
   });
 
+  const allSymbolsSet = new Set([
+    ...appConfig.coins.map(c => `${c.symbol}_${c.unit_currency || 'KRW'}`),
+    ...Object.keys(realTimeData)
+  ]);
+  const allSymbols = Array.from(allSymbolsSet);
+
   // 저장된 실시간 데이터로 테이블 채우기
   // --sort-by 인수에 따라 정렬. 기본은 변동률순.
-  const sortedSymbols: string[] = Object.keys(realTimeData).sort(
+  const sortedSymbols: string[] = allSymbols.sort(
     (a: string, b: string) => {
+      const coinAConfig = appConfig.coins.find(c => `${c.symbol}_${c.unit_currency || 'KRW'}` === a);
+      const coinBConfig = appConfig.coins.find(c => `${c.symbol}_${c.unit_currency || 'KRW'}` === b);
+
+      const aIsHolding = !!(coinAConfig && ((coinAConfig.balance || 0) > 0 || (coinAConfig.locked || 0) > 0));
+      const bIsHolding = !!(coinBConfig && ((coinBConfig.balance || 0) > 0 || (coinBConfig.locked || 0) > 0));
+
+      if (aIsHolding && !bIsHolding) return -1;
+      if (!aIsHolding && bIsHolding) return 1;
+
+      const dataA = realTimeData[a];
+      const dataB = realTimeData[b];
+
+      if (dataA && !dataB) return -1;
+      if (!dataA && dataB) return 1;
+      if (!dataA && !dataB) return a.localeCompare(b);
+
       if (sortBy === "name") {
         return a.localeCompare(b); // 이름순
       }
       if (sortBy === 'my') {
-        const coinA = appConfig.coins.find(c => c.symbol + "_" + (c.unit_currency || "KRW") === a);
-        const coinB = appConfig.coins.find(c => c.symbol + "_" + (c.unit_currency || "KRW") === b);
-
-        const balanceA = (coinA?.balance || 0) + (coinA?.locked || 0);
-        const balanceB = (coinB?.balance || 0) + (coinB?.locked || 0);
-
-        const priceA = parseFloat(realTimeData[a]?.closePrice || '0');
-        const priceB = parseFloat(realTimeData[b]?.closePrice || '0');
-
+        const balanceA = (coinAConfig?.balance || 0) + (coinAConfig?.locked || 0);
+        const balanceB = (coinBConfig?.balance || 0) + (coinBConfig?.locked || 0);
+        const priceA = parseFloat(dataA?.closePrice || '0');
+        const priceB = parseFloat(dataB?.closePrice || '0');
         const valueA = balanceA * priceA;
         const valueB = balanceB * priceB;
-
         return valueB - valueA; // 보유금액이 큰 순서로 정렬
       }
       // 기본 정렬: 변동률 기준 내림차순
-      const rateA: number = parseFloat(realTimeData[a].chgRate);
-      const rateB: number = parseFloat(realTimeData[b].chgRate);
+      const rateA: number = parseFloat(dataA.chgRate);
+      const rateB: number = parseFloat(dataB.chgRate);
       return rateB - rateA;
     }
   );
  
-  for (const symbol of sortedSymbols) {
+  const displaySymbols = sortedSymbols.length > displayLimit ? sortedSymbols.slice(0, displayLimit) : sortedSymbols;
+
+  for (const symbol of displaySymbols) {
+    const data: TickerContent | undefined = realTimeData[symbol];
+    const coinConfig = appConfig.coins.find(
+      (c) => c.symbol + "_" + (c.unit_currency || "KRW") === symbol
+    );
+    const icon: string = coinConfig?.icon || iconMap[symbol] || " ";
+
+    if (!data) {
+        const balance = (coinConfig?.balance || 0) + (coinConfig?.locked || 0);
+        const avgPrice = coinConfig?.averagePurchasePrice || 0;
+        table.push([
+            chalk.yellow(`${icon} ${symbol}`),
+            chalk.gray('Loading...'),
+            chalk.gray('-'),
+            chalk.gray('-'),
+            chalk.gray('-'),
+            chalk.gray('-'),
+            chalk.gray('-'),
+            balance > 0 ? `${balance.toLocaleString("ko-KR")}` : '-',
+            avgPrice > 0 ? avgPrice.toLocaleString("ko-KR") : '-',
+            chalk.gray('-'),
+            chalk.gray('-'),
+            chalk.gray('-'),
+            chalk.gray('-'),
+            chalk.gray('-'),
+        ]);
+        continue;
+    }
+    
     // Iterate over sorted symbols
-    const data: TickerContent = realTimeData[symbol];
     const price: string = parseFloat(data.closePrice).toLocaleString("ko-KR");
     const prevPrice: number = parseFloat(
       data.lastClosePrice || data.prevClosePrice
@@ -337,12 +394,6 @@ function redrawTable(): void {
     } else if (changeRate < 0) {
       rateColor = chalk.red;
     }
-
-    const icon: string = iconMap[symbol] || " ";
-
-    const coinConfig = appConfig.coins.find(
-      (c) => c.symbol + "_" + (c.unit_currency || "KRW") === symbol
-    );
 
     let profitLossRate = "-";
     let profitLossAmount = "-";
@@ -499,6 +550,9 @@ function redrawTable(): void {
   console.log(chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit)"));
   console.log(sentimentColor(marketSentiment)); // Display market sentiment
   console.log(table.toString());
+  if (sortedSymbols.length > displayLimit) {
+    console.log(chalk.yellow(`참고: 시세 표시가 ${displayLimit}개로 제한되었습니다. (총 ${sortedSymbols.length}개)`));
+  }
 }
 
 function connect(): void {
