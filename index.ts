@@ -668,7 +668,7 @@ function redrawTable(): void {
   }
 
   // 콘솔을 지우고 테이블 출력 (깜빡임 방지)
-  process.stdout.write('\x1B[H\x1B[J');
+  process.stdout.write("\x1B[?25l\x1B[H\x1B[J"); // 커서 숨기기, 홈으로 이동, 화면 지우기
   console.log(chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit) - debate300.com"));
   console.log(sentimentColor(marketSentiment)); // Display market sentiment
   console.log(table.toString());
