@@ -58,6 +58,14 @@ interface ApiConfig {
 // Define icon map
 let iconMap: Record<string, string> = {};
 
+// Interface for market data
+interface MarketInfo {
+    market: string;
+    korean_name: string;
+    english_name: string;
+}
+let marketInfo: Record<string, MarketInfo> = {};
+
 // Interface for the content received from Bithumb WebSocket
 interface TickerContent {
   volumePower: string; // 체결강도(매수/매도 비율 지표, 100↑이면 매수 우위 경향)
@@ -233,9 +241,34 @@ function updateCoinConfiguration(userHoldings: CoinConfig[]) {
   appConfig.coins = mergedCoins;
 }
 
+// Function to fetch market names from Upbit API
+async function fetchMarketInfo(): Promise<void> {
+  try {
+    // 유저가 제공한 응답 형식과 일치하는 Upbit API를 사용하여 코인 한글 이름을 가져옵니다.
+    const response = await axios.get('https://api.bithumb.com/v1/market/all?isDetails=false');
+    if (response.status === 200) {
+      const markets: any[] = response.data;
+      markets.forEach((market: any) => {
+        if (market.market.startsWith('KRW-')) {
+          const symbol = `${market.market.replace('KRW-', '')}_KRW`;
+          marketInfo[symbol] = {
+            market: market.market,
+            korean_name: market.korean_name,
+            english_name: market.english_name,
+          };
+        }
+      });
+      // console.log(chalk.green("Market names loaded successfully from Upbit API."));
+    }
+  } catch (error) {
+    // console.error(chalk.red("한글 코인 이름 로딩 오류:"), error);
+  }
+}
+
 
 // Modify appConfig and symbols based on API data if available
 async function initializeAppConfig() {
+  await fetchMarketInfo();
   if (apiConfig) {
     if (sortByArgIndex === -1) {
       sortBy = 'my';
@@ -292,7 +325,7 @@ function redrawTable(): void {
       chalk.magentaBright("고가"),
       chalk.magentaBright("저가"),
     ],
-    colWidths: [15, 18, 10, 15, 10, 15, 10, 12, 18, 18, 18, 15, 15, 15],
+    colWidths: [25, 18, 10, 15, 10, 15, 10, 12, 15, 18, 18, 12, 12, 12],
   });
 
   const allSymbolsSet = new Set([
@@ -348,12 +381,14 @@ function redrawTable(): void {
       (c) => c.symbol + "_" + (c.unit_currency || "KRW") === symbol
     );
     const icon: string = coinConfig?.icon || iconMap[symbol] || " ";
+    const koreanName = marketInfo[symbol]?.korean_name;
+    const displayName = koreanName ? `${symbol.replace('_KRW', '')} ${koreanName}` : symbol;
 
     if (!data) {
         const balance = (coinConfig?.balance || 0) + (coinConfig?.locked || 0);
         const avgPrice = coinConfig?.averagePurchasePrice || 0;
         table.push([
-            chalk.yellow(`${icon} ${symbol}`),
+            chalk.yellow(`${icon} ${displayName}`),
             chalk.gray('Loading...'),
             chalk.gray('-'),
             chalk.gray('-'),
@@ -451,7 +486,7 @@ function redrawTable(): void {
     } 
 
     table.push([
-      chalk.yellow(`${icon} ${symbol}`),
+      chalk.yellow(`${icon} ${displayName}`),
       priceColor(`${price} KRW`),
       rateColor(`${changeRate.toFixed(2)}%`),
       rateColor(`${changeAmount.toLocaleString("ko-KR")} KRW`),
