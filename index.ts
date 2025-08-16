@@ -15,7 +15,7 @@ const sortByArgIndex = args.indexOf('--sort-by');
 if (sortByArgIndex > -1 && args[sortByArgIndex + 1]) {
     const sortArg = args[sortByArgIndex + 1];
     // 허용된 정렬 옵션인지 확인
-    if (['name', 'rate'].includes(sortArg)) {
+    if (['name', 'rate', 'my'].includes(sortArg)) {
         sortBy = sortArg;
     } else {
         console.log(chalk.yellow(`Warning: Invalid sort option '${sortArg}'. Defaulting to 'rate'.`));
@@ -225,6 +225,9 @@ function updateCoinConfiguration(userHoldings: CoinConfig[]) {
 // Modify appConfig and symbols based on API data if available
 async function initializeAppConfig() {
   if (apiConfig) {
+    if (sortByArgIndex === -1) {
+      sortBy = 'my';
+    }
     const userHoldings = await fetchUserHoldings();
     updateCoinConfiguration(userHoldings);
     symbols = appConfig.coins.map(coin => coin.symbol + "_" + (coin.unit_currency || "KRW")); // unit_currency 추가
@@ -286,6 +289,21 @@ function redrawTable(): void {
     (a: string, b: string) => {
       if (sortBy === "name") {
         return a.localeCompare(b); // 이름순
+      }
+      if (sortBy === 'my') {
+        const coinA = appConfig.coins.find(c => c.symbol + "_" + (c.unit_currency || "KRW") === a);
+        const coinB = appConfig.coins.find(c => c.symbol + "_" + (c.unit_currency || "KRW") === b);
+
+        const balanceA = (coinA?.balance || 0) + (coinA?.locked || 0);
+        const balanceB = (coinB?.balance || 0) + (coinB?.locked || 0);
+
+        const priceA = parseFloat(realTimeData[a]?.closePrice || '0');
+        const priceB = parseFloat(realTimeData[b]?.closePrice || '0');
+
+        const valueA = balanceA * priceA;
+        const valueB = balanceB * priceB;
+
+        return valueB - valueA; // 보유금액이 큰 순서로 정렬
       }
       // 기본 정렬: 변동률 기준 내림차순
       const rateA: number = parseFloat(realTimeData[a].chgRate);
