@@ -2,10 +2,13 @@ import WebSocket from "ws";
 import chalk from "chalk";
 import Table from "cli-table3";
 import * as fs from "fs";
+import axios from "axios";
 
 // 커맨드 라인 인수 처리
 const args = process.argv.slice(2);
 let sortBy = 'rate'; // 기본 정렬: 변동률
+let displayLimit = 30; // 기본 표시 갯수
+
 const sortByArgIndex = args.indexOf('--sort-by');
 if (sortByArgIndex > -1 && args[sortByArgIndex + 1]) {
     const sortArg = args[sortByArgIndex + 1];
@@ -14,6 +17,16 @@ if (sortByArgIndex > -1 && args[sortByArgIndex + 1]) {
         sortBy = sortArg;
     } else {
         console.log(chalk.yellow(`Warning: Invalid sort option '${sortArg}'. Defaulting to 'rate'.`));
+    }
+}
+
+const limitArgIndex = args.indexOf('--limit');
+if (limitArgIndex > -1 && args[limitArgIndex + 1]) {
+    const limitArg = parseInt(args[limitArgIndex + 1], 10);
+    if (!isNaN(limitArg) && limitArg > 0) {
+        displayLimit = limitArg;
+    } else {
+        console.log(chalk.yellow(`Warning: Invalid limit option '${args[limitArgIndex + 1]}'. Using default of ${displayLimit}.`));
     }
 }
 
@@ -32,6 +45,14 @@ interface AppConfig {
 
 // Define icon map
 let iconMap: Record<string, string> = {};
+
+// Interface for market data
+interface MarketInfo {
+    market: string;
+    korean_name: string;
+    english_name: string;
+}
+let marketInfo: Record<string, MarketInfo> = {};
 
 // Interface for the content received from Bithumb WebSocket
 interface TickerContent {
@@ -79,6 +100,28 @@ const symbols: string[] = appConfig.coins.map(
   (coin) => `${coin.symbol}_${coin.unit_currency}`
 );
 
+// Function to fetch market names from Bithumb API
+async function fetchMarketInfo(): Promise<void> {
+    try {
+      const response = await axios.get('https://api.bithumb.com/v1/market/all?isDetails=false');
+      if (response.status === 200) {
+        const markets: any[] = response.data;
+        markets.forEach((market: any) => {
+          if (market.market.startsWith('KRW-')) {
+            const symbol = `${market.market.replace('KRW-', '')}_KRW`;
+            marketInfo[symbol] = {
+              market: market.market,
+              korean_name: market.korean_name,
+              english_name: market.english_name,
+            };
+          }
+        });
+      }
+    } catch (error) {
+      // console.error(chalk.red("한글 코인 이름 로딩 오류:"), error);
+    }
+  }
+
 // Bithumb WebSocket URL
 const wsUri: string = "wss://pubwss.bithumb.com/pub/ws";
 
@@ -101,7 +144,7 @@ function redrawTable(): void {
       chalk.magentaBright("고가"), // High Price
       chalk.magentaBright("저가"), // Low Price
     ],
-    colWidths: [15, 15, 10, 10, 15, 18, 15, 15, 15],
+    colWidths: [22, 15, 10, 10, 15, 18, 15, 15, 15],
   });
 
   // 저장된 실시간 데이터로 테이블 채우기
@@ -118,7 +161,9 @@ function redrawTable(): void {
     }
   );
 
-  for (const symbol of sortedSymbols) {
+  const displaySymbols = sortedSymbols.length > displayLimit ? sortedSymbols.slice(0, displayLimit) : sortedSymbols;
+
+  for (const symbol of displaySymbols) {
     // Iterate over sorted symbols
     const data: TickerContent = realTimeData[symbol];
     // console.log(data); // Removed for cleaner output after debugging
@@ -147,6 +192,8 @@ function redrawTable(): void {
     }
 
     const icon: string = iconMap[symbol] || " "; // Get icon, default to space if not found
+    const koreanName = marketInfo[symbol]?.korean_name;
+    const displayName = koreanName ? `${symbol.replace('_KRW', '')} ${koreanName}` : symbol;
 
     const coinConfig = appConfig.coins.find((c) => `${c.symbol}_${c.unit_currency}` === symbol);
     let profitLossRate: string;
@@ -175,7 +222,7 @@ function redrawTable(): void {
     }
 
     table.push([
-      chalk.yellow(`${icon} ${symbol}`),
+      chalk.yellow(`${icon} ${displayName}`),
       priceColor(`${price} KRW`),
       parseFloat(data.volumePower).toFixed(2),
       profitLossColor(profitLossRate), // Profit/Loss Rate
@@ -243,6 +290,9 @@ function redrawTable(): void {
   console.log(chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit) - Debate300.com"));
   console.log(sentimentColor(marketSentiment)); // Display market sentiment
   console.log(table.toString());
+  if (sortedSymbols.length > displayLimit) {
+    console.log(chalk.yellow(`참고: 시세 표시가 ${displayLimit}개로 제한되었습니다. (총 ${sortedSymbols.length}개)`));
+  }
 }
 
 function connect(): void {
@@ -301,5 +351,10 @@ function connect(): void {
   });
 }
 
+async function start() {
+    await fetchMarketInfo();
+    connect();
+}
+
 // 프로그램 시작
-connect();
+start();
