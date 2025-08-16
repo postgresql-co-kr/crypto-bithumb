@@ -250,7 +250,7 @@ function updateCoinConfiguration(userHoldings: CoinConfig[]) {
   appConfig.coins = mergedCoins;
 }
 
-// Function to fetch market names from Upbit API
+// Function to fetch market names from Bithumb API
 async function fetchMarketInfo(): Promise<void> {
   try {
     // 유저가 제공한 응답 형식과 일치하는 Upbit API를 사용하여 코인 한글 이름을 가져옵니다.
