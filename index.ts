@@ -1,7 +1,10 @@
+#!/usr/bin/env node
 import WebSocket from "ws";
 import chalk from "chalk";
 import Table from "cli-table3";
 import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 import axios from "axios";
 
 // 커맨드 라인 인수 처리
@@ -81,14 +84,38 @@ interface RealTimeData {
 }
 
 let appConfig: AppConfig;
-try {
-  const configPath = "./config.json";
-  const configContent = fs.readFileSync(configPath, "utf8");
-  appConfig = JSON.parse(configContent);
-} catch (error) {
-  console.error(chalk.red("Error loading config.json:"), error);
-  process.exit(1); // Exit if config cannot be loaded
+
+function loadConfig(): AppConfig {
+  const currentDirConfigPath = path.join(process.cwd(), "config.json");
+  const homeDirConfigPath = path.join(os.homedir(), ".debate300", "config.json");
+
+  let configContent: string | undefined;
+  let configPathUsed: string | undefined;
+
+  if (fs.existsSync(currentDirConfigPath)) {
+    configContent = fs.readFileSync(currentDirConfigPath, "utf8");
+    configPathUsed = currentDirConfigPath;
+  } else if (fs.existsSync(homeDirConfigPath)) {
+    configContent = fs.readFileSync(homeDirConfigPath, "utf8");
+    configPathUsed = homeDirConfigPath;
+  } else {
+    console.error(chalk.red("오류: 'config.json' 파일을 찾을 수 없습니다."));
+    console.error(chalk.yellow("다음 위치에서 파일을 확인했습니다:"));
+    console.error(chalk.yellow(`  - 현재 디렉토리: ${currentDirConfigPath}`));
+    console.error(chalk.yellow(`  - 홈 디렉토리: ${homeDirConfigPath}`));
+    console.error(chalk.yellow("debate300을 실행하려면 위 경로 중 한 곳에 'config.json' 파일을 생성해야 합니다."));
+    process.exit(1);
+  }
+
+  try {
+    return JSON.parse(configContent);
+  } catch (error) {
+    console.error(chalk.red(`오류: '${configPathUsed}' 파일의 형식이 올바르지 않습니다. JSON 파싱 오류:`), error);
+    process.exit(1);
+  }
 }
+
+appConfig = loadConfig();
 
 // Populate iconMap after appConfig is loaded
 appConfig.coins.forEach((coin) => {
