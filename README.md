@@ -1,14 +1,14 @@
-# 빗썸 실시간 암호화폐 시세 표시기
+# 빗썸 실시간 암호화폐 시세 표시기 (`pro` 브랜치)
 
-빗썸 거래소의 암호화폐 시세를 터미널에 실시간으로 표시하는 커맨드 라인 인터페이스(CLI) 애플리케이션입니다.
+빗썸 거래소의 암호화폐 시세를 터미널에 실시간으로 표시하는 커맨드 라인 인터페이스(CLI) 애플리케이션입니다. `pro` 브랜치는 빗썸 API 키와 연동하여 사용자의 실제 자산 현황을 포함한 상세 정보를 제공하는 전문가용 버전입니다.
 
-## 주요 기능
+## `pro` 브랜치 주요 기능
 
--   **실시간 시세 추적**: 웹소켓을 통해 빗썸의 암호화폐 데이터를 실시간으로 가져와 표시합니다.
--   **사용자 정의 코인 목록**: `config.json` 파일을 통해 추적할 코인을 쉽게 설정할 수 있습니다.
--   **수익률 계산**: 사용자의 평균 매수 단가에 기반하여 수익률을 계산하고 표시합니다.
--   **시장 분위기 분석**: 추적 중인 코인들의 전반적인 등락률을 기반으로 시장 분위기(상승장, 하락장 등)를 보여줍니다.
--   **체결 강도**: 개별 코인의 체결 강도와 전체 시장의 가중 평균 체결 강도를 표시합니다.
+-   **모든 `main` 브랜치 기능 포함**: 실시간 시세 추적, 한글 코인 이름, 수익률 계산, 시장 분위기 분석 등 기본 기능을 모두 포함합니다.
+-   **자동 포트폴리오 연동**: 빗썸 계좌에 보유한 모든 암호화폐 자산을 자동으로 가져와 시세와 함께 표시합니다.
+-   **상세 자산 정보**: 개별 코인의 평가손익, 보유수량, 매수금액, 평가금액을 상세히 보여줍니다.
+-   **종합 포트폴리오 요약**: 총 매수금액, 총 평가금액, 총 평가손익, 보유 원화(KRW) 등 전체 자산 현황을 한눈에 파악할 수 있습니다.
+-   **보유금액 순 정렬**: `--sort-by my` 옵션을 통해 보유한 코인을 평가금액 순으로 정렬할 수 있습니다.
 
 ---
 
@@ -16,92 +16,82 @@
 
 ### 1. 개발 환경 설정 (최초 1회)
 
-이 애플리케이션을 실행하기 위해 필요한 `Git`, `Node.js`, `pnpm`을 먼저 설치합니다.
+이 애플리케이션을 실행하기 위해 필요한 `Git`, `Node.js`, `pnpm`을 먼저 설치해야 합니다.
 
 #### Git 설치
 
-소스 코드를 내려받기 위해 Git이 필요합니다.
-
 -   **Windows**: [Git for Windows](https://git-scm.com/download/win)를 다운로드하여 설치합니다.
--   **macOS**: Xcode Command Line Tools를 통해 설치합니다. 터미널에 아래 명령어를 입력하세요.
-    ```bash
-    xcode-select --install
-    ```
--   **Linux (Debian/Ubuntu)**:
-    ```bash
-    sudo apt-get update
-    sudo apt-get install git
-    ```
+-   **macOS**: 터미널에서 `xcode-select --install` 명령어를 실행합니다.
+-   **Linux (Debian/Ubuntu)**: `sudo apt-get update && sudo apt-get install git` 명령어를 실행합니다.
 
-#### Node.js 설치
+#### Node.js 설치 (v16 이상 권장)
 
-JavaScript 런타임 환경인 Node.js가 필요합니다. (v16 이상 권장)
-
--   **Windows**: [nodejs.org](https://nodejs.org/ko/)에서 LTS 버전을 다운로드하여 설치합니다.
--   **macOS & Linux**: `nvm`(Node Version Manager)을 사용하여 설치하는 것을 권장합니다. `nvm`을 사용하면 여러 Node.js 버전을 쉽게 관리할 수 있습니다.
-    1.  `nvm` 설치 (터미널에 아래 명령어 입력):
-        ```bash
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-        ```
-    2.  터미널 재시작 후, Node.js LTS 버전 설치:
-        ```bash
-        nvm install --lts
-        nvm use --lts
-        ```
+-   `nvm`(Node Version Manager)을 사용하여 설치하는 것을 권장합니다.
+    1.  `nvm` 설치: `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash`
+    2.  터미널 재시작 후 Node.js LTS 버전 설치: `nvm install --lts && nvm use --lts`
 
 #### pnpm 설치
 
-이 프로젝트는 `pnpm`을 패키지 매니저로 사용합니다. Node.js 설치 후, 터미널에 아래 명령어를 입력하여 `pnpm`을 전역으로 설치합니다.
-
-```bash
-npm install -g pnpm
-```
+-   `npm install -g pnpm` 명령어를 실행하여 `pnpm`을 전역으로 설치합니다.
 
 ### 2. 프로젝트 설정
 
-1.  **저장소 복제:**
+1.  **저장소 복제 및 브랜치 전환:**
     ```bash
-    git clone https://github.com/yoonoh/crypto-bithumb.git
+    git clone https://github.com/postgresql-co-kr/crypto-bithumb.git
     cd crypto-bithumb
+    git checkout pro # pro 브랜치로 전환
     ```
 
 2.  **의존성 설치:**
+    프로젝트 폴더로 이동한 후, 필요한 라이브러리를 설치합니다.
     ```bash
     pnpm install
     ```
 
-3.  **`config.json` 파일 설정:**
-    애플리케이션을 실행하기 전에, `config.json` 파일을 생성하고 추적할 코인을 설정해야 합니다. 아래는 예시입니다.
+3.  **`api_keys.json` 파일 설정 (가장 중요):**
+    `pro` 브랜치의 핵심 기능인 자산 연동을 위해, 빗썸에서 발급받은 API 키를 입력해야 합니다. 프로젝트 루트 디렉터리에 `api_keys.json` 파일을 직접 생성하고 아래와 같이 내용을 입력하세요.
+
+    ```json
+    {
+      "bithumb_api_key": "YOUR_CONNECT_KEY",
+      "bithumb_secret_key": "YOUR_SECRET_KEY"
+    }
+    ```
+    -   `YOUR_CONNECT_KEY`와 `YOUR_SECRET_KEY`를 실제 발급받은 키로 교체해야 합니다.
+
+    **API 키 발급 방법:**
+    1.  [빗썸 API 관리 페이지](https://www.bithumb.com/react/api-support/management-api)로 직접 이동하거나, 빗썸 로그인 후 **더보기 > API 관리** 메뉴로 이동합니다.
+    2.  **API Key 생성** 버튼을 누릅니다.
+    3.  **API 버전 및 권한 설정:**
+        -   **API 2.0**을 선택합니다.
+        -   **API 활성 항목 선택**에서 **`자산 조회`** 권한만 체크합니다. 이 프로그램은 사용자의 보유 자산 정보를 읽어오는 기능만 필요로 하므로, 보안을 위해 다른 모든 권한(거래 주문, 입출금 등)은 반드시 해제해주세요.
+    4.  **IP 주소 설정:**
+        -   **팁:** IP 주소는 특정 IP에서만 API를 사용하도록 제한하는 보안 기능입니다. 현재 사용 중인 PC의 IP를 입력해야 합니다. '내 IP 주소' 버튼을 누르면 자동으로 입력됩니다.
+        -   만약 IP가 유동적이라 자주 바뀐다면, IP 주소 입력란 아래의 **'SMS 받기'** 또는 **'카카오톡 받기'** 버튼을 눌러 현재 접속한 IP 주소를 쉽게 확인할 수 있습니다.
+    5.  보안 인증(ARS 또는 OTP)을 완료하면 `Connect Key`와 `Secret Key`가 발급됩니다.
+    6.  **키 저장:** **`Secret Key`는 이 페이지를 벗어나면 다시 볼 수 없으므로, 반드시 안전한 곳에 즉시 복사하여 보관**하세요.
+
+4.  **`config.json` 파일 설정:**
+    `api_keys.json`을 사용하면 보유한 코인은 자동으로 목록에 추가됩니다. `config.json`에는 **보유하고 있지 않지만 시세를 추적하고 싶은 코인**을 추가할 수 있습니다.
 
     ```json
     {
       "coins": [
         {
-          "symbol": "BTC",
-          "icon": "₿",
-          "averagePurchasePrice": 50000000
-        },
-        {
-          "symbol": "ETH",
-          "icon": "Ξ",
-          "averagePurchasePrice": 3000000
-        },
-        {
-          "symbol": "XRP",
-          "icon": "✕",
-          "averagePurchasePrice": 0
+          "symbol": "WLD",
+          "icon": "🌐",
+          "averagePurchasePrice": 0,
+          "unit_currency": "KRW"
         }
       ]
     }
     ```
-    -   `symbol`: 코인의 티커 심볼 (예: "BTC", "ETH").
-    -   `icon`: 코인 이름 옆에 표시될 아이콘.
-    -   `averagePurchasePrice`: 평균 매수 단가. 0으로 설정 시, '-' 표시됩니다.
+    -   `averagePurchasePrice`를 `0`으로 설정하면, 보유하지 않은 코인이므로 수익률은 표시되지 않습니다.
 
 ### 3. 실행
 
 1.  **애플리케이션 빌드:**
-    TypeScript 코드를 JavaScript로 컴파일합니다.
     ```bash
     pnpm build
     ```
@@ -110,29 +100,27 @@ npm install -g pnpm
     ```bash
     node dist/index.js
     ```
-    -   애플리케이션을 종료하려면 `Ctrl+C`를 누르세요.
 
 #### 실행 옵션
 
-커맨드 라인 인수를 통해 테이블의 정렬 순서를 변경할 수 있습니다.
+-   `--sort-by`: 정렬 기준을 선택합니다.
+    -   `my` (**`pro` 브랜치 기본값**): 보유 코인을 평가금액이 높은 순으로 정렬합니다.
+    -   `rate`: 등락률 기준 내림차순 정렬.
+    -   `name`: 코인 이름(심볼) 기준 오름차순 정렬.
 
--   `node dist/index.js --sort-by rate`
-    -   **기본값.** 코인 등락률을 기준으로 내림차순 정렬합니다.
--   `node dist/index.js --sort-by name`
-    -   코인 이름(심볼)을 기준으로 오름차순 정렬합니다.
+-   `--limit`: 표시할 코인의 최대 개수를 지정합니다. (예: `--limit 10`)
 
 ---
 
-## 출력 예시
+## 출력 예시 (`pro` 브랜치)
 
 Bithumb 실시간 시세 (Ctrl+C to exit)
-> 전체 시장: 상승세 📈 | 체결강도: 110.25
+> 전체 시장: 하락세 📉 | 체결강도: 88.45 | 총 매수: 15,000,000 KRW | 총 평가: 14,500,000 KRW | 총 손익: <span style="color:blue">-500,000 KRW</span> | 보유원화: 1,234,567 KRW
 
-| 코인 | 현재가 | 체결강도 | 수익률 | 변동률(24H) | 변동금액(24H) | 고가(24H) | 저가(24H) |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| ₿ BTC | 51,000,000 KRW | 120.50 | +2.00% | +2.00% | +1,000,000 KRW | 52,000,000 | 50,000,000 |
-| Ξ ETH | 3,100,000 KRW | 95.75 | +3.33% | +1.64% | +50,000 KRW | 3,150,000 | 3,050,000 |
-| ✕ XRP | 750 KRW | 88.10 | -1.32% | -1.32% | -10 KRW | 760 | 740 |
+| 코인 | 현재가 | 전일대비 | 전일대비금액 | 체결강도 | 평가손익 | 수익률 | 보유수량 | 평균매수가 | 매수금액 | 평가금액 | 전일종가 | 고가 | 저가 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| ₿ BTC 비트코인 | 91,000,000 | -0.55% | -500,000 | 95.23 | <span style="color:red">+1,000,000</span> | +10.00% | 0.11 | 90,000,000 | 9,900,000 | 10,010,000 | 91,500,000 | 92,000,000 | 90,500,000 |
+| Ξ ETH 이더리움 | 4,500,000 | -1.10% | -50,000 | 85.10 | <span style="color:blue">-1,500,000</span> | -30.00% | 1.00 | 6,000,000 | 6,000,000 | 4,500,000 | 4,550,000 | 4,600,000 | 4,450,000 |
 
 ## 라이선스
 

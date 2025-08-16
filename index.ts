@@ -3,8 +3,7 @@ import chalk from "chalk";
 import Table from "cli-table3";
 import * as fs from "fs";
 import axios from "axios";
-import * as jwt from "jsonwebtoken";
-import { v4 as uuidv4 } from "uuid";
+
 
 // 프로그램 시작 시 커서를 숨깁니다.
 process.stdout.write('\x1B[?25l');
@@ -591,7 +590,7 @@ function redrawTable(): void {
 
   // 콘솔을 지우고 테이블 출력 (깜빡임 방지)
   process.stdout.write('\x1B[2J\x1B[H');
-  console.log(chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit)"));
+  console.log(chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit) - debate300.com"));
   console.log(sentimentColor(marketSentiment)); // Display market sentiment
   console.log(table.toString());
   if (sortedSymbols.length > displayLimit) {
