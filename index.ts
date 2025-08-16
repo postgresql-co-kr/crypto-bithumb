@@ -3,10 +3,19 @@ import chalk from "chalk";
 import Table from "cli-table3";
 import * as fs from "fs";
 import axios from "axios";
-import * as crypto from "crypto"; // For HMAC-SHA512 signing
 import * as jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
-import { config } from "process";
+
+// 프로그램 시작 시 커서를 숨깁니다.
+process.stdout.write('\x1B[?25l');
+
+// 프로그램 종료 시 커서가 다시 보이도록 보장합니다.
+process.on('exit', () => {
+    process.stdout.write('\x1B[?25h');
+});
+process.on('SIGINT', () => {
+    process.exit();
+});
 
 // 커맨드 라인 인수 처리
 const args = process.argv.slice(2);
@@ -325,7 +334,7 @@ function redrawTable(): void {
       chalk.magentaBright("고가"),
       chalk.magentaBright("저가"),
     ],
-    colWidths: [25, 18, 10, 15, 10, 15, 10, 12, 15, 18, 18, 12, 12, 12],
+    colWidths: [22, 18, 10, 15, 10, 15, 10, 12, 15, 18, 18, 12, 12, 12],
   });
 
   const allSymbolsSet = new Set([
