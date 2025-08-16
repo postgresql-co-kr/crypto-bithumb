@@ -295,11 +295,20 @@ function redrawTable(): void {
   }
 }
 
+// 재연결 관련 변수
+let reconnectInterval = 1000; // 초기 재연결 간격 (1초)
+const maxReconnectInterval = 30000; // 최대 재연결 간격 (30초)
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 10; // 최대 재연결 시도 횟수
+
 function connect(): void {
   const ws: WebSocket = new WebSocket(wsUri);
 
   ws.on("open", () => {
     console.log(chalk.green("Bithumb WebSocket에 연결되었습니다."));
+    // 성공적으로 연결되면 재연결 시도 횟수 및 간격 초기화
+    reconnectAttempts = 0;
+    reconnectInterval = 1000;
 
     // 구독 메시지 전송
     const subscribeMsg = {
@@ -345,9 +354,16 @@ function connect(): void {
 
   ws.on("close", () => {
     console.log(
-      chalk.yellow("WebSocket 연결이 종료되었습니다. 5초 후 재연결합니다.")
+      chalk.yellow("WebSocket 연결이 종료되었습니다. 재연결을 시도합니다...")
     );
-    setTimeout(connect, 5000);
+    if (reconnectAttempts < maxReconnectAttempts) {
+      reconnectAttempts++;
+      reconnectInterval = Math.min(reconnectInterval * 2, maxReconnectInterval);
+      console.log(chalk.yellow(`재연결 시도 #${reconnectAttempts} (${reconnectInterval / 1000}초 후)`));
+      setTimeout(connect, reconnectInterval);
+    } else {
+      console.error(chalk.red("최대 재연결 시도 횟수에 도달했습니다. 재연결을 중단합니다."));
+    }
   });
 }
 
