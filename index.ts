@@ -742,7 +742,6 @@ function connect(): void {
       clearTimeout(redrawTimeout);
       redrawTimeout = null;
     }
-    setTimeout(connect, RECONNECT_INTERVAL); // Reconnect after a delay
   });
 }
 
@@ -752,4 +751,11 @@ initializeAppConfig().then(() => {
   if(apiConfig) {
       schedulePeriodicUpdates();
   }
+
+  // 주기적으로 WebSocket 연결을 확인하고 필요한 경우 다시 연결합니다.
+  setInterval(() => {
+    if (!ws || ws.readyState === WebSocket.CLOSED) {
+      connect();
+    }
+  }, RECONNECT_INTERVAL);
 });
