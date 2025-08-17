@@ -11,6 +11,10 @@
     "dist",
     "config.json-top30"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/postgresql-co-kr/crypto-bithumb.git"
+  },
   "scripts": {
     "build": "tsc",
     "test": "echo \"No test specified\""
