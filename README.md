@@ -32,7 +32,7 @@
 -   **파일 내용 (수정 필요)**:
     ```json
     {
-      "bithumb_api_key": "YOUR_CONNECT_KEY",
+      "bithumb_api_key": "YOUR_API_KEY",
       "bithumb_secret_key": "YOUR_SECRET_KEY"
     }
     ```
@@ -71,11 +71,7 @@
 
 모든 설정이 완료되면 터미널에 다음 명령어를 입력하여 바로 실행할 수 있습니다.
 
--   **`npx`로 실행 (권장):**
-    ```bash
-    npx @debate300/bithumb-pro
-    ```
--   **전역 설치 후 실행:**
+  - **전역 설치 후 실행:**
     ```bash
     npm install -g @debate300/bithumb-pro
     debate300-pro
