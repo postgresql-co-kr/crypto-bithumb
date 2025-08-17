@@ -13,7 +13,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/debate300/crypto-bithumb.git"
+    "url": "git+https://github.com/postgresql-co-kr/crypto-bithumb.git"
   },
   "scripts": {
     "build": "tsc",
