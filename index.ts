@@ -18,7 +18,10 @@ function ensureConfigFile() {
     try {
       fs.mkdirSync(configDir, { recursive: true });
     } catch (error) {
-      console.error(chalk.red(`Error creating config directory at ${configDir}:`), error);
+      console.error(
+        chalk.red(`Error creating config directory at ${configDir}:`),
+        error
+      );
       process.exit(1);
     }
   }
@@ -27,10 +30,12 @@ function ensureConfigFile() {
   if (!fs.existsSync(configFilePath)) {
     // If not, create it with default content from config.json-top30
     try {
-      const defaultConfigPath = path.join(__dirname, '..', 'config.json-top30');
+      const defaultConfigPath = path.join(__dirname, "..", "config.json-top30");
       const defaultConfigContent = fs.readFileSync(defaultConfigPath, "utf8");
       fs.writeFileSync(configFilePath, defaultConfigContent, "utf8");
-      console.log(chalk.green(`Default config file created at ${configFilePath}`));
+      console.log(
+        chalk.green(`Default config file created at ${configFilePath}`)
+      );
     } catch (error) {
       console.error(chalk.red(`Error creating default config file:`), error);
       process.exit(1);
@@ -41,31 +46,40 @@ function ensureConfigFile() {
 // Ensure the config file is in place before doing anything else.
 ensureConfigFile();
 
-
 // 커맨드 라인 인수 처리
 const args = process.argv.slice(2);
-let sortBy = 'rate'; // 기본 정렬: 변동률
+let sortBy = "rate"; // 기본 정렬: 변동률
 let displayLimit = 30; // 기본 표시 갯수
 
-const sortByArgIndex = args.indexOf('--sort-by');
+const sortByArgIndex = args.indexOf("--sort-by");
 if (sortByArgIndex > -1 && args[sortByArgIndex + 1]) {
-    const sortArg = args[sortByArgIndex + 1];
-    // 허용된 정렬 옵션인지 확인
-    if (['name', 'rate'].includes(sortArg)) {
-        sortBy = sortArg;
-    } else {
-        console.log(chalk.yellow(`Warning: Invalid sort option '${sortArg}'. Defaulting to 'rate'.`));
-    }
+  const sortArg = args[sortByArgIndex + 1];
+  // 허용된 정렬 옵션인지 확인
+  if (["name", "rate"].includes(sortArg)) {
+    sortBy = sortArg;
+  } else {
+    console.log(
+      chalk.yellow(
+        `Warning: Invalid sort option '${sortArg}'. Defaulting to 'rate'.`
+      )
+    );
+  }
 }
 
-const limitArgIndex = args.indexOf('--limit');
+const limitArgIndex = args.indexOf("--limit");
 if (limitArgIndex > -1 && args[limitArgIndex + 1]) {
-    const limitArg = parseInt(args[limitArgIndex + 1], 10);
-    if (!isNaN(limitArg) && limitArg > 0) {
-        displayLimit = limitArg;
-    } else {
-        console.log(chalk.yellow(`Warning: Invalid limit option '${args[limitArgIndex + 1]}'. Using default of ${displayLimit}.`));
-    }
+  const limitArg = parseInt(args[limitArgIndex + 1], 10);
+  if (!isNaN(limitArg) && limitArg > 0) {
+    displayLimit = limitArg;
+  } else {
+    console.log(
+      chalk.yellow(
+        `Warning: Invalid limit option '${
+          args[limitArgIndex + 1]
+        }'. Using default of ${displayLimit}.`
+      )
+    );
+  }
 }
 
 // Interface for coin configuration from config.json
@@ -86,9 +100,9 @@ let iconMap: Record<string, string> = {};
 
 // Interface for market data
 interface MarketInfo {
-    market: string;
-    korean_name: string;
-    english_name: string;
+  market: string;
+  korean_name: string;
+  english_name: string;
 }
 let marketInfo: Record<string, MarketInfo> = {};
 
@@ -122,7 +136,11 @@ let appConfig: AppConfig;
 
 function loadConfig(): AppConfig {
   const currentDirConfigPath = path.join(process.cwd(), "config.json");
-  const homeDirConfigPath = path.join(os.homedir(), ".debate300", "config.json");
+  const homeDirConfigPath = path.join(
+    os.homedir(),
+    ".debate300",
+    "config.json"
+  );
 
   let configContent: string | undefined;
   let configPathUsed: string | undefined;
@@ -138,14 +156,23 @@ function loadConfig(): AppConfig {
     console.error(chalk.yellow("다음 위치에서 파일을 확인했습니다:"));
     console.error(chalk.yellow(`  - 현재 디렉토리: ${currentDirConfigPath}`));
     console.error(chalk.yellow(`  - 홈 디렉토리: ${homeDirConfigPath}`));
-    console.error(chalk.yellow("debate300을 실행하려면 위 경로 중 한 곳에 'config.json' 파일을 생성해야 합니다."));
+    console.error(
+      chalk.yellow(
+        "debate300을 실행하려면 위 경로 중 한 곳에 'config.json' 파일을 생성해야 합니다."
+      )
+    );
     process.exit(1);
   }
 
   try {
     return JSON.parse(configContent);
   } catch (error) {
-    console.error(chalk.red(`오류: '${configPathUsed}' 파일의 형식이 올바르지 않습니다. JSON 파싱 오류:`), error);
+    console.error(
+      chalk.red(
+        `오류: '${configPathUsed}' 파일의 형식이 올바르지 않습니다. JSON 파싱 오류:`
+      ),
+      error
+    );
     process.exit(1);
   }
 }
@@ -164,25 +191,27 @@ const symbols: string[] = appConfig.coins.map(
 
 // Function to fetch market names from Bithumb API
 async function fetchMarketInfo(): Promise<void> {
-    try {
-      const response = await axios.get('https://api.bithumb.com/v1/market/all?isDetails=false');
-      if (response.status === 200) {
-        const markets: any[] = response.data;
-        markets.forEach((market: any) => {
-          if (market.market.startsWith('KRW-')) {
-            const symbol = `${market.market.replace('KRW-', '')}_KRW`;
-            marketInfo[symbol] = {
-              market: market.market,
-              korean_name: market.korean_name,
-              english_name: market.english_name,
-            };
-          }
-        });
-      }
-    } catch (error) {
-      // console.error(chalk.red("한글 코인 이름 로딩 오류:"), error);
+  try {
+    const response = await axios.get(
+      "https://api.bithumb.com/v1/market/all?isDetails=false"
+    );
+    if (response.status === 200) {
+      const markets: any[] = response.data;
+      markets.forEach((market: any) => {
+        if (market.market.startsWith("KRW-")) {
+          const symbol = `${market.market.replace("KRW-", "")}_KRW`;
+          marketInfo[symbol] = {
+            market: market.market,
+            korean_name: market.korean_name,
+            english_name: market.english_name,
+          };
+        }
+      });
     }
+  } catch (error) {
+    // console.error(chalk.red("한글 코인 이름 로딩 오류:"), error);
   }
+}
 
 // Bithumb WebSocket URL
 const wsUri: string = "wss://pubwss.bithumb.com/pub/ws";
@@ -202,11 +231,11 @@ function redrawTable(): void {
       chalk.magentaBright("수익률"), // Profit/Loss Rate
       chalk.magentaBright("전일대비"),
       chalk.magentaBright("전일대비금액"),
-      chalk.magentaBright("시가"),
+      chalk.magentaBright("전일종가"),
       chalk.magentaBright("고가"), // High Price
       chalk.magentaBright("저가"), // Low Price
     ],
-    colWidths: [22, 15, 10, 10, 15, 18, 15, 15, 15],
+    colWidths: [22, 15, 10, 10, 15, 18, 15, 20, 20],
   });
 
   // 저장된 실시간 데이터로 테이블 채우기
@@ -223,7 +252,10 @@ function redrawTable(): void {
     }
   );
 
-  const displaySymbols = sortedSymbols.length > displayLimit ? sortedSymbols.slice(0, displayLimit) : sortedSymbols;
+  const displaySymbols =
+    sortedSymbols.length > displayLimit
+      ? sortedSymbols.slice(0, displayLimit)
+      : sortedSymbols;
 
   for (const symbol of displaySymbols) {
     // Iterate over sorted symbols
@@ -255,9 +287,13 @@ function redrawTable(): void {
 
     const icon: string = iconMap[symbol] || " "; // Get icon, default to space if not found
     const koreanName = marketInfo[symbol]?.korean_name;
-    const displayName = koreanName ? `${symbol.replace('_KRW', '')} ${koreanName}` : symbol;
+    const displayName = koreanName
+      ? `${symbol.replace("_KRW", "")} ${koreanName}`
+      : symbol;
 
-    const coinConfig = appConfig.coins.find((c) => `${c.symbol}_${c.unit_currency}` === symbol);
+    const coinConfig = appConfig.coins.find(
+      (c) => `${c.symbol}_${c.unit_currency}` === symbol
+    );
     let profitLossRate: string;
     let profitLossColor = chalk.white;
 
@@ -283,6 +319,30 @@ function redrawTable(): void {
       }
     }
 
+    const prevClosePriceNum = parseFloat(data.prevClosePrice);
+    const highPriceNum = parseFloat(data.highPrice);
+    const lowPriceNum = parseFloat(data.lowPrice);
+
+    const highPricePercent =
+      prevClosePriceNum > 0
+        ? ((highPriceNum - prevClosePriceNum) / prevClosePriceNum) * 100
+        : 0;
+    const lowPricePercent =
+      prevClosePriceNum > 0
+        ? ((lowPriceNum - prevClosePriceNum) / prevClosePriceNum) * 100
+        : 0;
+
+    const highPriceDisplay = `${
+      highPricePercent >= 0
+        ? chalk.green(`+${highPricePercent.toFixed(2)}%`)
+        : chalk.red(`${highPricePercent.toFixed(2)}%`)
+    } (${highPriceNum.toLocaleString("ko-KR")})`;
+    const lowPriceDisplay = `${
+      lowPricePercent >= 0
+        ? chalk.green(`+${lowPricePercent.toFixed(2)}%`)
+        : chalk.red(`${lowPricePercent.toFixed(2)}%`)
+    } (${lowPriceNum.toLocaleString("ko-KR")})`;
+
     table.push([
       chalk.yellow(`${icon} ${displayName}`),
       priceColor(`${price} KRW`),
@@ -290,9 +350,9 @@ function redrawTable(): void {
       profitLossColor(profitLossRate), // Profit/Loss Rate
       rateColor(`${changeRate.toFixed(2)}%`),
       rateColor(`${changeAmount.toLocaleString("ko-KR")} KRW`),
-      parseFloat(data.prevClosePrice).toLocaleString("ko-KR"),
-      parseFloat(data.highPrice).toLocaleString("ko-KR"), // High Price
-      parseFloat(data.lowPrice).toLocaleString("ko-KR"), // Low Price
+      prevClosePriceNum.toLocaleString("ko-KR"),
+      highPriceDisplay,
+      lowPriceDisplay,
     ]);
   }
 
@@ -337,7 +397,7 @@ function redrawTable(): void {
     const volumePowers = Object.values(realTimeData)
       .map((data) => parseFloat(data.volumePower))
       .filter((vp) => !isNaN(vp));
-    const averageVolumePower = 
+    const averageVolumePower =
       volumePowers.length > 0
         ? volumePowers.reduce((sum, vp) => sum + vp, 0) / volumePowers.length
         : 0;
@@ -349,11 +409,17 @@ function redrawTable(): void {
 
   // 화면을 지우고 다시 그릴 때 깜빡임 최소화
   process.stdout.write("\x1B[?25l\x1B[H\x1B[J"); // 커서 숨기기, 홈으로 이동, 화면 지우기
-  console.log(chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit) - Debate300.com"));
+  console.log(
+    chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit) - Debate300.com")
+  );
   console.log(sentimentColor(marketSentiment)); // Display market sentiment
   console.log(table.toString());
   if (sortedSymbols.length > displayLimit) {
-    console.log(chalk.yellow(`참고: 시세 표시가 ${displayLimit}개로 제한되었습니다. (총 ${sortedSymbols.length}개)`));
+    console.log(
+      chalk.yellow(
+        `참고: 시세 표시가 ${displayLimit}개로 제한되었습니다. (총 ${sortedSymbols.length}개)`
+      )
+    );
   }
 }
 
@@ -390,7 +456,7 @@ function connect(): void {
 
       // 실시간 데이터 업데이트
       realTimeData[content.symbol] = content;
-      
+
       // 깜빡임 감소를 위해 redrawTable 호출을 디바운스합니다.
       if (!redrawTimeout) {
         redrawTimeout = setTimeout(() => {
@@ -414,8 +480,8 @@ function connect(): void {
 }
 
 async function start() {
-    await fetchMarketInfo();
-    connect();
+  await fetchMarketInfo();
+  connect();
 }
 
 // 프로그램 시작
