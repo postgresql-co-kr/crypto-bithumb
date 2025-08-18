@@ -20,7 +20,10 @@ function ensureConfigFile() {
     try {
       fs.mkdirSync(configDir, { recursive: true });
     } catch (error) {
-      console.error(chalk.red(`Error creating config directory at ${configDir}:`), error);
+      console.error(
+        chalk.red(`Error creating config directory at ${configDir}:`),
+        error
+      );
       process.exit(1);
     }
   }
@@ -29,10 +32,12 @@ function ensureConfigFile() {
   if (!fs.existsSync(configFilePath)) {
     // If not, create it with default content from config.json-top30
     try {
-      const defaultConfigPath = path.join(__dirname, '..', 'config.json-top30');
+      const defaultConfigPath = path.join(__dirname, "..", "config.json-top30");
       const defaultConfigContent = fs.readFileSync(defaultConfigPath, "utf8");
       fs.writeFileSync(configFilePath, defaultConfigContent, "utf8");
-      console.log(chalk.green(`Default config file created at ${configFilePath}`));
+      console.log(
+        chalk.green(`Default config file created at ${configFilePath}`)
+      );
     } catch (error) {
       console.error(chalk.red(`Error creating default config file:`), error);
       process.exit(1);
@@ -43,42 +48,51 @@ function ensureConfigFile() {
 // Ensure the config file is in place before doing anything else.
 ensureConfigFile();
 
-
 // 프로그램 시작 시 커서를 숨깁니다.
-process.stdout.write('\x1B[?25l');
+process.stdout.write("\x1B[?25l");
 
 // 프로그램 종료 시 커서가 다시 보이도록 보장합니다.
-process.on('exit', () => {
-    process.stdout.write('\x1B[?25h');
+process.on("exit", () => {
+  process.stdout.write("\x1B[?25h");
 });
-process.on('SIGINT', () => {
-    process.exit();
+process.on("SIGINT", () => {
+  process.exit();
 });
 
 // 커맨드 라인 인수 처리
 const args = process.argv.slice(2);
-let sortBy = 'rate'; // 기본 정렬: 변동률
+let sortBy = "rate"; // 기본 정렬: 변동률
 let displayLimit = 30; // 기본 표시 갯수
 
-const sortByArgIndex = args.indexOf('--sort-by');
+const sortByArgIndex = args.indexOf("--sort-by");
 if (sortByArgIndex > -1 && args[sortByArgIndex + 1]) {
-    const sortArg = args[sortByArgIndex + 1];
-    // 허용된 정렬 옵션인지 확인
-    if (['name', 'rate', 'my'].includes(sortArg)) {
-        sortBy = sortArg;
-    } else {
-        console.log(chalk.yellow(`Warning: Invalid sort option '${sortArg}'. Defaulting to 'rate'.`));
-    }
+  const sortArg = args[sortByArgIndex + 1];
+  // 허용된 정렬 옵션인지 확인
+  if (["name", "rate", "my"].includes(sortArg)) {
+    sortBy = sortArg;
+  } else {
+    console.log(
+      chalk.yellow(
+        `Warning: Invalid sort option '${sortArg}'. Defaulting to 'rate'.`
+      )
+    );
+  }
 }
 
-const limitArgIndex = args.indexOf('--limit');
+const limitArgIndex = args.indexOf("--limit");
 if (limitArgIndex > -1 && args[limitArgIndex + 1]) {
-    const limitArg = parseInt(args[limitArgIndex + 1], 10);
-    if (!isNaN(limitArg) && limitArg > 0) {
-        displayLimit = limitArg;
-    } else {
-        console.log(chalk.yellow(`Warning: Invalid limit option '${args[limitArgIndex + 1]}'. Using default of ${displayLimit}.`));
-    }
+  const limitArg = parseInt(args[limitArgIndex + 1], 10);
+  if (!isNaN(limitArg) && limitArg > 0) {
+    displayLimit = limitArg;
+  } else {
+    console.log(
+      chalk.yellow(
+        `Warning: Invalid limit option '${
+          args[limitArgIndex + 1]
+        }'. Using default of ${displayLimit}.`
+      )
+    );
+  }
 }
 
 // Interface for coin configuration from config.json
@@ -107,9 +121,9 @@ let iconMap: Record<string, string> = {};
 
 // Interface for market data
 interface MarketInfo {
-    market: string;
-    korean_name: string;
-    english_name: string;
+  market: string;
+  korean_name: string;
+  english_name: string;
 }
 let marketInfo: Record<string, MarketInfo> = {};
 
@@ -135,12 +149,12 @@ interface TickerContent {
 }
 
 interface Accounts {
-    currency: string,  // symbol
-    balance: string, // 보유 수량
-    locked: string, // 매도 수량
-    avg_buy_price: string, // 령균 매수가
-    avg_buy_price_modified: boolean,
-    unit_currency: string // KRW, BTC
+  currency: string; // symbol
+  balance: string; // 보유 수량
+  locked: string; // 매도 수량
+  avg_buy_price: string; // 령균 매수가
+  avg_buy_price_modified: boolean;
+  unit_currency: string; // KRW, BTC
 }
 
 // Interface for realTimeData object
@@ -157,8 +171,16 @@ let apiConfig: ApiConfig | null = null;
 
 function loadConfig(): AppConfig {
   const currentDirConfigPath = path.join(process.cwd(), "config.json");
-  const homeDirConfigPath = path.join(os.homedir(), ".debate300", "config.json");
-  const homeDirApiKeysPath = path.join(os.homedir(), ".debate300", "api_keys.json");
+  const homeDirConfigPath = path.join(
+    os.homedir(),
+    ".debate300",
+    "config.json"
+  );
+  const homeDirApiKeysPath = path.join(
+    os.homedir(),
+    ".debate300",
+    "api_keys.json"
+  );
 
   // Check for api_keys.json and handle it first
   if (!fs.existsSync(homeDirApiKeysPath)) {
@@ -166,10 +188,16 @@ function loadConfig(): AppConfig {
       bithumb_api_key: "YOUR_CONNECT_KEY",
       bithumb_secret_key: "YOUR_SECRET_KEY",
     };
-    fs.writeFileSync(homeDirApiKeysPath, JSON.stringify(defaultApiKeys, null, 2), "utf8");
+    fs.writeFileSync(
+      homeDirApiKeysPath,
+      JSON.stringify(defaultApiKeys, null, 2),
+      "utf8"
+    );
     console.error(chalk.red("API 키 파일이 없어 기본 파일을 생성했습니다."));
     console.error(chalk.yellow(`파일 위치: ${homeDirApiKeysPath}`));
-    console.error(chalk.yellow("파일을 열어 본인의 빗썸 API 키를 입력해주세요."));
+    console.error(
+      chalk.yellow("파일을 열어 본인의 빗썸 API 키를 입력해주세요.")
+    );
     console.error(chalk.yellow("API 키 발급은 README.md 파일을 참고하세요."));
     process.exit(1);
   }
@@ -184,7 +212,9 @@ function loadConfig(): AppConfig {
   ) {
     console.error(chalk.red("빗썸 API 키가 설정되지 않았습니다."));
     console.error(chalk.yellow(`파일 위치: ${homeDirApiKeysPath}`));
-    console.error(chalk.yellow("파일을 열어 본인의 빗썸 API 키를 입력해주세요."));
+    console.error(
+      chalk.yellow("파일을 열어 본인의 빗썸 API 키를 입력해주세요.")
+    );
     console.error(chalk.yellow("API 키 발급은 README.md 파일을 참고하세요."));
     process.exit(1);
   }
@@ -204,19 +234,27 @@ function loadConfig(): AppConfig {
     console.error(chalk.red("오류: 'config.json' 파일을 찾을 수 없습니다."));
     process.exit(1);
   }
-  
-  console.log(chalk.green("API keys loaded successfully. Attempting to fetch user holdings from Bithumb API."));
+
+  console.log(
+    chalk.green(
+      "API keys loaded successfully. Attempting to fetch user holdings from Bithumb API."
+    )
+  );
 
   try {
     return JSON.parse(configContent);
   } catch (error) {
-    console.error(chalk.red(`오류: '${configPathUsed}' 파일의 형식이 올바르지 않습니다. JSON 파싱 오류:`), error);
+    console.error(
+      chalk.red(
+        `오류: '${configPathUsed}' 파일의 형식이 올바르지 않습니다. JSON 파싱 오류:`
+      ),
+      error
+    );
     process.exit(1);
   }
 }
 
 appConfig = loadConfig();
-
 
 // Populate iconMap after appConfig is loaded
 appConfig.coins.forEach((coin) => {
@@ -224,7 +262,9 @@ appConfig.coins.forEach((coin) => {
 });
 
 // 구독할 코인 목록 (예: BTC, ETH, XRP)
-let symbols: string[] = appConfig.coins.map((coin) => coin.symbol + "_" + (coin.unit_currency || "KRW")); // unit_currency 추가
+let symbols: string[] = appConfig.coins.map(
+  (coin) => coin.symbol + "_" + (coin.unit_currency || "KRW")
+); // unit_currency 추가
 
 // Bithumb API Base URL (for v1 API)
 const BITHUMB_API_BASE_URL = "https://api.bithumb.com";
@@ -238,8 +278,15 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
 
   const currentApiConfig: ApiConfig = apiConfig;
 
-  if (!currentApiConfig.bithumb_api_key || !currentApiConfig.bithumb_secret_key) {
-    console.log(chalk.yellow("Bithumb API key or secret is missing. Cannot fetch user holdings.\n"));
+  if (
+    !currentApiConfig.bithumb_api_key ||
+    !currentApiConfig.bithumb_secret_key
+  ) {
+    console.log(
+      chalk.yellow(
+        "Bithumb API key or secret is missing. Cannot fetch user holdings.\n"
+      )
+    );
     return [];
   }
 
@@ -250,18 +297,20 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
   const payload = {
     access_key: currentApiConfig.bithumb_api_key,
     nonce: uuidv4(),
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
   const jwtToken = jwt.sign(payload, currentApiConfig.bithumb_secret_key);
 
   try {
-    const response = await axios.get(fullUrl, { // GET 요청으로 변경
+    const response = await axios.get(fullUrl, {
+      // GET 요청으로 변경
       headers: {
-        Authorization: `Bearer ${jwtToken}`
+        Authorization: `Bearer ${jwtToken}`,
       },
     });
 
-    if (response.status === 200) { // status 확인 조건 추가
+    if (response.status === 200) {
+      // status 확인 조건 추가
       const data = response.data; // response.data.data 사용
       const userHoldings: CoinConfig[] = [];
 
@@ -273,9 +322,9 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
         const avg_buy_price = parseFloat(item.avg_buy_price);
         const unit_currency = item.unit_currency || "KRW"; // unit_currency 추가
 
-        if (currency === 'P') {
+        if (currency === "P") {
           userPoints = balance;
-        } else if (currency === 'KRW') {
+        } else if (currency === "KRW") {
           krwBalance = balance;
           krwLocked = locked;
         } else if (avg_buy_price > 0) {
@@ -285,7 +334,7 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
             averagePurchasePrice: avg_buy_price,
             balance: balance,
             locked: locked,
-            unit_currency: unit_currency // unit_currency 추가
+            unit_currency: unit_currency, // unit_currency 추가
           });
         }
       });
@@ -296,9 +345,11 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
       console.error(chalk.red(`Bithumb API Error: ${response.data.message}`));
       return [];
     }
-
   } catch (error) {
-    console.error(chalk.red("Error fetching user holdings from Bithumb API:"), error);
+    console.error(
+      chalk.red("Error fetching user holdings from Bithumb API:"),
+      error
+    );
     return [];
   }
 }
@@ -307,17 +358,27 @@ function updateCoinConfiguration(userHoldings: CoinConfig[]) {
   if (userHoldings.length <= 0) return;
 
   const mergedCoins: CoinConfig[] = [];
-  const apiSymbols = new Set(userHoldings.map(h => h.symbol + "_" + (h.unit_currency || "KRW")));
+  const apiSymbols = new Set(
+    userHoldings.map((h) => h.symbol + "_" + (h.unit_currency || "KRW"))
+  );
 
-  userHoldings.forEach(apiCoin => {
+  userHoldings.forEach((apiCoin) => {
     mergedCoins.push(apiCoin);
   });
 
-  appConfig.coins.forEach(configCoin => {
-    if (!apiSymbols.has(configCoin.symbol + "_" + (configCoin.unit_currency || "KRW"))) {
+  appConfig.coins.forEach((configCoin) => {
+    if (
+      !apiSymbols.has(
+        configCoin.symbol + "_" + (configCoin.unit_currency || "KRW")
+      )
+    ) {
       mergedCoins.push(configCoin);
     } else {
-      const existingCoin = mergedCoins.find(mc => mc.symbol === configCoin.symbol && mc.unit_currency === configCoin.unit_currency);
+      const existingCoin = mergedCoins.find(
+        (mc) =>
+          mc.symbol === configCoin.symbol &&
+          mc.unit_currency === configCoin.unit_currency
+      );
       if (existingCoin) {
         existingCoin.icon = configCoin.icon;
       }
@@ -330,12 +391,14 @@ function updateCoinConfiguration(userHoldings: CoinConfig[]) {
 async function fetchMarketInfo(): Promise<void> {
   try {
     // 유저가 제공한 응답 형식과 일치하는 Upbit API를 사용하여 코인 한글 이름을 가져옵니다.
-    const response = await axios.get('https://api.bithumb.com/v1/market/all?isDetails=false');
+    const response = await axios.get(
+      "https://api.bithumb.com/v1/market/all?isDetails=false"
+    );
     if (response.status === 200) {
       const markets: any[] = response.data;
       markets.forEach((market: any) => {
-        if (market.market.startsWith('KRW-')) {
-          const symbol = `${market.market.replace('KRW-', '')}_KRW`;
+        if (market.market.startsWith("KRW-")) {
+          const symbol = `${market.market.replace("KRW-", "")}_KRW`;
           marketInfo[symbol] = {
             market: market.market,
             korean_name: market.korean_name,
@@ -350,29 +413,34 @@ async function fetchMarketInfo(): Promise<void> {
   }
 }
 
-
 // Modify appConfig and symbols based on API data if available
 async function initializeAppConfig() {
   await fetchMarketInfo();
   if (apiConfig) {
     if (sortByArgIndex === -1) {
-      sortBy = 'my';
+      sortBy = "my";
     }
     const userHoldings = await fetchUserHoldings();
     updateCoinConfiguration(userHoldings);
-    symbols = appConfig.coins.map(coin => coin.symbol + "_" + (coin.unit_currency || "KRW")); // unit_currency 추가
-    console.log(chalk.green("App configuration initialized with user holdings from Bithumb API."));
+    symbols = appConfig.coins.map(
+      (coin) => coin.symbol + "_" + (coin.unit_currency || "KRW")
+    ); // unit_currency 추가
+    console.log(
+      chalk.green(
+        "App configuration initialized with user holdings from Bithumb API."
+      )
+    );
   }
 }
 
 function schedulePeriodicUpdates() {
   setInterval(async () => {
-      if (apiConfig) {
-          // console.log(chalk.cyan("Periodically updating coin information..."));
-          const userHoldings = await fetchUserHoldings();
-          updateCoinConfiguration(userHoldings);
-          // console.log(chalk.cyan("Coin information has been updated."));
-      }
+    if (apiConfig) {
+      // console.log(chalk.cyan("Periodically updating coin information..."));
+      const userHoldings = await fetchUserHoldings();
+      updateCoinConfiguration(userHoldings);
+      // console.log(chalk.cyan("Coin information has been updated."));
+    }
   }, 10000);
 }
 
@@ -399,7 +467,7 @@ function redrawTable(): void {
       chalk.magentaBright("전일대비"),
       chalk.magentaBright("전일대비금액"),
       chalk.magentaBright("체결강도"),
-      
+
       chalk.magentaBright("평가손익"),
       chalk.magentaBright("수익률"),
       chalk.magentaBright("보유수량"),
@@ -412,55 +480,66 @@ function redrawTable(): void {
       chalk.magentaBright("고가"),
       chalk.magentaBright("저가"),
     ],
-    colWidths: [22, 18, 10, 15, 10, 15, 10, 12, 15, 18, 18, 12, 12, 12],
+    colWidths: [22, 18, 10, 15, 10, 15, 10, 12, 15, 18, 18, 12, 18, 18],
   });
 
   const allSymbolsSet = new Set([
-    ...appConfig.coins.map(c => `${c.symbol}_${c.unit_currency || 'KRW'}`),
-    ...Object.keys(realTimeData)
+    ...appConfig.coins.map((c) => `${c.symbol}_${c.unit_currency || "KRW"}`),
+    ...Object.keys(realTimeData),
   ]);
   const allSymbols = Array.from(allSymbolsSet);
 
   // 저장된 실시간 데이터로 테이블 채우기
   // --sort-by 인수에 따라 정렬. 기본은 변동률순.
-  const sortedSymbols: string[] = allSymbols.sort(
-    (a: string, b: string) => {
-      const coinAConfig = appConfig.coins.find(c => `${c.symbol}_${c.unit_currency || 'KRW'}` === a);
-      const coinBConfig = appConfig.coins.find(c => `${c.symbol}_${c.unit_currency || 'KRW'}` === b);
+  const sortedSymbols: string[] = allSymbols.sort((a: string, b: string) => {
+    const coinAConfig = appConfig.coins.find(
+      (c) => `${c.symbol}_${c.unit_currency || "KRW"}` === a
+    );
+    const coinBConfig = appConfig.coins.find(
+      (c) => `${c.symbol}_${c.unit_currency || "KRW"}` === b
+    );
 
-      const aIsHolding = !!(coinAConfig && ((coinAConfig.balance || 0) > 0 || (coinAConfig.locked || 0) > 0));
-      const bIsHolding = !!(coinBConfig && ((coinBConfig.balance || 0) > 0 || (coinBConfig.locked || 0) > 0));
+    const aIsHolding = !!(
+      coinAConfig &&
+      ((coinAConfig.balance || 0) > 0 || (coinAConfig.locked || 0) > 0)
+    );
+    const bIsHolding = !!(
+      coinBConfig &&
+      ((coinBConfig.balance || 0) > 0 || (coinBConfig.locked || 0) > 0)
+    );
 
-      if (aIsHolding && !bIsHolding) return -1;
-      if (!aIsHolding && bIsHolding) return 1;
+    if (aIsHolding && !bIsHolding) return -1;
+    if (!aIsHolding && bIsHolding) return 1;
 
-      const dataA = realTimeData[a];
-      const dataB = realTimeData[b];
+    const dataA = realTimeData[a];
+    const dataB = realTimeData[b];
 
-      if (dataA && !dataB) return -1;
-      if (!dataA && dataB) return 1;
-      if (!dataA && !dataB) return a.localeCompare(b);
+    if (dataA && !dataB) return -1;
+    if (!dataA && dataB) return 1;
+    if (!dataA && !dataB) return a.localeCompare(b);
 
-      if (sortBy === "name") {
-        return a.localeCompare(b); // 이름순
-      }
-      if (sortBy === 'my') {
-        const balanceA = (coinAConfig?.balance || 0) + (coinAConfig?.locked || 0);
-        const balanceB = (coinBConfig?.balance || 0) + (coinBConfig?.locked || 0);
-        const priceA = parseFloat(dataA?.closePrice || '0');
-        const priceB = parseFloat(dataB?.closePrice || '0');
-        const valueA = balanceA * priceA;
-        const valueB = balanceB * priceB;
-        return valueB - valueA; // 보유금액이 큰 순서로 정렬
-      }
-      // 기본 정렬: 변동률 기준 내림차순
-      const rateA: number = parseFloat(dataA.chgRate);
-      const rateB: number = parseFloat(dataB.chgRate);
-      return rateB - rateA;
+    if (sortBy === "name") {
+      return a.localeCompare(b); // 이름순
     }
-  );
- 
-  const displaySymbols = sortedSymbols.length > displayLimit ? sortedSymbols.slice(0, displayLimit) : sortedSymbols;
+    if (sortBy === "my") {
+      const balanceA = (coinAConfig?.balance || 0) + (coinAConfig?.locked || 0);
+      const balanceB = (coinBConfig?.balance || 0) + (coinBConfig?.locked || 0);
+      const priceA = parseFloat(dataA?.closePrice || "0");
+      const priceB = parseFloat(dataB?.closePrice || "0");
+      const valueA = balanceA * priceA;
+      const valueB = balanceB * priceB;
+      return valueB - valueA; // 보유금액이 큰 순서로 정렬
+    }
+    // 기본 정렬: 변동률 기준 내림차순
+    const rateA: number = parseFloat(dataA.chgRate);
+    const rateB: number = parseFloat(dataB.chgRate);
+    return rateB - rateA;
+  });
+
+  const displaySymbols =
+    sortedSymbols.length > displayLimit
+      ? sortedSymbols.slice(0, displayLimit)
+      : sortedSymbols;
 
   for (const symbol of displaySymbols) {
     const data: TickerContent | undefined = realTimeData[symbol];
@@ -469,30 +548,32 @@ function redrawTable(): void {
     );
     const icon: string = coinConfig?.icon || iconMap[symbol] || " ";
     const koreanName = marketInfo[symbol]?.korean_name;
-    const displayName = koreanName ? `${symbol.replace('_KRW', '')} ${koreanName}` : symbol;
+    const displayName = koreanName
+      ? `${symbol.replace("_KRW", "")} ${koreanName}`
+      : symbol;
 
     if (!data) {
-        const balance = (coinConfig?.balance || 0) + (coinConfig?.locked || 0);
-        const avgPrice = coinConfig?.averagePurchasePrice || 0;
-        table.push([
-            chalk.yellow(`${icon} ${displayName}`),
-            chalk.gray('Loading...'),
-            chalk.gray('-'),
-            chalk.gray('-'),
-            chalk.gray('-'),
-            chalk.gray('-'),
-            chalk.gray('-'),
-            balance > 0 ? `${balance.toLocaleString("ko-KR")}` : '-',
-            avgPrice > 0 ? avgPrice.toLocaleString("ko-KR") : '-',
-            chalk.gray('-'),
-            chalk.gray('-'),
-            chalk.gray('-'),
-            chalk.gray('-'),
-            chalk.gray('-'),
-        ]);
-        continue;
+      const balance = (coinConfig?.balance || 0) + (coinConfig?.locked || 0);
+      const avgPrice = coinConfig?.averagePurchasePrice || 0;
+      table.push([
+        chalk.yellow(`${icon} ${displayName}`),
+        chalk.gray("Loading..."),
+        chalk.gray("-"),
+        chalk.gray("-"),
+        chalk.gray("-"),
+        chalk.gray("-"),
+        chalk.gray("-"),
+        balance > 0 ? `${balance.toLocaleString("ko-KR")}` : "-",
+        avgPrice > 0 ? avgPrice.toLocaleString("ko-KR") : "-",
+        chalk.gray("-"),
+        chalk.gray("-"),
+        chalk.gray("-"),
+        chalk.gray("-"),
+        chalk.gray("-"),
+      ]);
+      continue;
     }
-    
+
     // Iterate over sorted symbols
     const price: string = parseFloat(data.closePrice).toLocaleString("ko-KR");
     const prevPrice: number = parseFloat(
@@ -523,13 +604,9 @@ function redrawTable(): void {
     let purchaseAmount = "-";
     let holdingQuantity = "-";
     let avgPurchasePrice = "-";
-    let profitLossColor = chalk.white;   
+    let profitLossColor = chalk.white;
 
-    
-    if (
-      coinConfig &&
-      coinConfig.averagePurchasePrice > 0
-    ) {
+    if (coinConfig && coinConfig.averagePurchasePrice > 0) {
       const currentPrice = parseFloat(data.closePrice);
       const avgPrice = coinConfig.averagePurchasePrice;
       avgPurchasePrice = avgPrice.toLocaleString("ko-KR");
@@ -540,29 +617,26 @@ function redrawTable(): void {
       let balance = 0;
       balance += coinConfig.balance ? coinConfig.balance : 0;
       balance += coinConfig.locked ? coinConfig.locked : 0;
-     
-      if(balance > 0 ) {
+
+      if (balance > 0) {
         const pnl = (currentPrice - avgPrice) * balance;
         totalProfitLossAmount += pnl;
         profitLossAmount = `${pnl.toLocaleString("ko-KR", {
           maximumFractionDigits: 0,
         })} KRW`;
-  
+
         const evalAmount = currentPrice * balance;
         totalEvaluationAmount += evalAmount;
         evaluationAmount = `${evalAmount.toLocaleString("ko-KR", {
           maximumFractionDigits: 0,
         })} KRW`;
-  
+
         const purchAmount = avgPrice * balance;
         totalPurchaseAmount += purchAmount;
         purchaseAmount = `${purchAmount.toLocaleString("ko-KR", {
           maximumFractionDigits: 0,
         })} KRW`;
         holdingQuantity = `${balance.toLocaleString("ko-KR")}`;
-
-
-
       }
 
       if (rate > 0) {
@@ -570,7 +644,31 @@ function redrawTable(): void {
       } else if (rate < 0) {
         profitLossColor = chalk.red;
       }
-    } 
+    }
+
+    const highPriceNum = parseFloat(data.highPrice);
+    const lowPriceNum = parseFloat(data.lowPrice);
+    const prevClosePriceNum = parseFloat(data.prevClosePrice);
+
+    const highPricePercent =
+      prevClosePriceNum > 0
+        ? ((highPriceNum - prevClosePriceNum) / prevClosePriceNum) * 100
+        : 0;
+    const lowPricePercent =
+      prevClosePriceNum > 0
+        ? ((lowPriceNum - prevClosePriceNum) / prevClosePriceNum) * 100
+        : 0;
+
+    const highPriceDisplay = `${
+      highPricePercent >= 0
+        ? chalk.green(`+${highPricePercent.toFixed(2)}%`)
+        : chalk.red(`${highPricePercent.toFixed(2)}%`)
+    } (${highPriceNum.toLocaleString("ko-KR")})`;
+    const lowPriceDisplay = `${
+      lowPricePercent >= 0
+        ? chalk.green(`+${lowPricePercent.toFixed(2)}%`)
+        : chalk.red(`${lowPricePercent.toFixed(2)}%`)
+    } (${lowPriceNum.toLocaleString("ko-KR")})`;
 
     table.push([
       chalk.yellow(`${icon} ${displayName}`),
@@ -583,13 +681,13 @@ function redrawTable(): void {
       profitLossColor(profitLossRate),
       holdingQuantity,
       avgPurchasePrice,
-      
+
       purchaseAmount,
       evaluationAmount,
 
       parseFloat(data.prevClosePrice).toLocaleString("ko-KR"),
-      parseFloat(data.highPrice).toLocaleString("ko-KR"),
-      parseFloat(data.lowPrice).toLocaleString("ko-KR"),
+      highPriceDisplay,
+      lowPriceDisplay,
     ]);
   }
 
@@ -634,18 +732,29 @@ function redrawTable(): void {
     const volumePowers = Object.values(realTimeData)
       .map((data) => parseFloat(data.volumePower))
       .filter((vp) => !isNaN(vp));
-    const averageVolumePower = 
+    const averageVolumePower =
       volumePowers.length > 0
         ? volumePowers.reduce((sum, vp) => sum + vp, 0) / volumePowers.length
         : 0;
     marketSentiment += ` | 체결강도: ${averageVolumePower.toFixed(2)}`;
 
     if (totalPurchaseAmount > 0) {
-      const formattedPurchase = totalPurchaseAmount.toLocaleString("ko-KR", { maximumFractionDigits: 0 });
-      const formattedEval = totalEvaluationAmount.toLocaleString("ko-KR", { maximumFractionDigits: 0 });
-      const formattedPnl = totalProfitLossAmount.toLocaleString("ko-KR", { maximumFractionDigits: 0 });
-      const pnlColor = totalProfitLossAmount > 0 ? chalk.green : totalProfitLossAmount < 0 ? chalk.red : chalk.white;
-      
+      const formattedPurchase = totalPurchaseAmount.toLocaleString("ko-KR", {
+        maximumFractionDigits: 0,
+      });
+      const formattedEval = totalEvaluationAmount.toLocaleString("ko-KR", {
+        maximumFractionDigits: 0,
+      });
+      const formattedPnl = totalProfitLossAmount.toLocaleString("ko-KR", {
+        maximumFractionDigits: 0,
+      });
+      const pnlColor =
+        totalProfitLossAmount > 0
+          ? chalk.green
+          : totalProfitLossAmount < 0
+          ? chalk.red
+          : chalk.white;
+
       marketSentiment += ` | 총 매수금액: ${formattedPurchase} KRW`;
       marketSentiment += ` | 총 평가금액: ${formattedEval} KRW`;
       marketSentiment += ` | 총 평가손익: ${pnlColor(`${formattedPnl} KRW`)}`;
@@ -653,15 +762,21 @@ function redrawTable(): void {
 
     const krwHoldings = krwBalance + krwLocked;
     if (krwHoldings > 0) {
-        marketSentiment += ` | 보유원화: ${krwHoldings.toLocaleString("ko-KR", { maximumFractionDigits: 0 })} KRW`;
+      marketSentiment += ` | 보유원화: ${krwHoldings.toLocaleString("ko-KR", {
+        maximumFractionDigits: 0,
+      })} KRW`;
     }
     if (krwBalance > 0) {
-        marketSentiment += ` | 주문가능원화: ${krwBalance.toLocaleString("ko-KR", { maximumFractionDigits: 0 })} KRW`;
+      marketSentiment += ` | 주문가능원화: ${krwBalance.toLocaleString(
+        "ko-KR",
+        { maximumFractionDigits: 0 }
+      )} KRW`;
     }
     if (userPoints > 0) {
-        marketSentiment += ` | 포인트: ${userPoints.toLocaleString("ko-KR", { maximumFractionDigits: 0 })}`;
+      marketSentiment += ` | 포인트: ${userPoints.toLocaleString("ko-KR", {
+        maximumFractionDigits: 0,
+      })}`;
     }
-
   } else {
     marketSentiment = "전체 시장: 데이터 부족";
     sentimentColor = chalk.gray;
@@ -669,17 +784,26 @@ function redrawTable(): void {
 
   // 콘솔을 지우고 테이블 출력 (깜빡임 방지)
   process.stdout.write("\x1B[?25l\x1B[H\x1B[J"); // 커서 숨기기, 홈으로 이동, 화면 지우기
-  console.log(chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit) - debate300.com"));
+  console.log(
+    chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit) - debate300.com")
+  );
   console.log(sentimentColor(marketSentiment)); // Display market sentiment
   console.log(table.toString());
   if (sortedSymbols.length > displayLimit) {
-    console.log(chalk.yellow(`참고: 시세 표시가 ${displayLimit}개로 제한되었습니다. (총 ${sortedSymbols.length}개)`));
+    console.log(
+      chalk.yellow(
+        `참고: 시세 표시가 ${displayLimit}개로 제한되었습니다. (총 ${sortedSymbols.length}개)`
+      )
+    );
   }
 }
 
 function connect(): void {
   // Prevent multiple connection attempts if one is already connecting or open
-  if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+  if (
+    ws &&
+    (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)
+  ) {
     return;
   }
 
@@ -694,7 +818,8 @@ function connect(): void {
       symbols: symbols,
       tickTypes: ["MID"], // 자정 기준 변동률
     };
-    if (ws) { // Add null check here
+    if (ws) {
+      // Add null check here
       ws.send(JSON.stringify(subscribeMsg));
     }
   });
@@ -710,15 +835,14 @@ function connect(): void {
       // Store the current closePrice as lastClosePrice for the next update
       if (realTimeData[content.symbol]) {
         content.lastClosePrice = realTimeData[content.symbol].closePrice;
-      }
-      else {
+      } else {
         // For the first message, set lastClosePrice to current closePrice
         content.lastClosePrice = content.closePrice;
       }
 
       // 실시간 데이터 업데이트
       realTimeData[content.symbol] = content;
-      
+
       // 깜빡임 감소를 위해 redrawTable 호출을 디바운스합니다. 따라서 redrawTable 호출을 디바운스합니다.
       if (!redrawTimeout) {
         redrawTimeout = setTimeout(() => {
@@ -738,7 +862,8 @@ function connect(): void {
       chalk.yellow("WebSocket 연결이 종료되었습니다. 재연결을 시도합니다.")
     );
     ws = null;
-    if (redrawTimeout) { // Clear redrawTimeout on close
+    if (redrawTimeout) {
+      // Clear redrawTimeout on close
       clearTimeout(redrawTimeout);
       redrawTimeout = null;
     }
@@ -748,8 +873,8 @@ function connect(): void {
 // 프로그램 시작
 initializeAppConfig().then(() => {
   connect();
-  if(apiConfig) {
-      schedulePeriodicUpdates();
+  if (apiConfig) {
+    schedulePeriodicUpdates();
   }
 
   // 주기적으로 WebSocket 연결을 확인하고 필요한 경우 다시 연결합니다.
