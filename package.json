@@ -2,7 +2,6 @@
   "name": "@debate300/bithumb-pro",
   "version": "1.0.20",
   "description": "A real-time cryptocurrency price tracker for Bithumb (Pro).",
-  "types": "dist/index.d.ts",
   "bin": {
     "debate300-pro": "dist/index.js"
   },
