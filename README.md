@@ -1,12 +1,15 @@
+# 빗썸 실시간 암호화폐 시세 표시기
+
+[![NPM Version](https://img.shields.io/npm/v/@debate300/bithumb.svg)](https://www.npmjs.com/package/@debate300/bithumb)
+[![NPM Downloads](https://img.shields.io/npm/dm/@debate300/bithumb.svg)](https://www.npmjs.com/package/@debate300/bithumb)
+
+빗썸 거래소의 암호화폐 시세를 터미널에 실시간으로 표시하는 커맨드 라인 인터페이스(CLI) 애플리케이션입니다.
+
 ## Install
 
 ```bash
-npm i -g @debate300/bithumb-pro
+npm i -g @debate300/bithumb
 ```
-
-# 빗썸 실시간 암호화폐 시세 표시기
-
-빗썸 거래소의 암호화폐 시세를 터미널에 실시간으로 표시하는 커맨드 라인 인터페이스(CLI) 애플리케이션입니다.
 
 ## 간편 설치 가이드 (Quick Start)
 
