@@ -1,5 +1,14 @@
 # 빗썸 실시간 암호화폐 시세 표시기 (Pro)
 
+[![NPM Version](https://img.shields.io/npm/v/@debate300/bithumb-pro.svg)](https://www.npmjs.com/package/@debate300/bithumb-pro)
+[![NPM Downloads](https://img.shields.io/npm/dm/@debate300/bithumb-pro.svg)](https://www.npmjs.com/package/@debate300/bithumb-pro)
+
+## Install
+
+```bash
+npm i -g @debate300/bithumb-pro
+```
+
 빗썸 거래소의 암호화폐 시세를 터미널에 실시간으로 표시하는 커맨드 라인 인터페이스(CLI) 애플리케이션입니다. `pro` 버전은 빗썸 API 키와 연동하여 사용자의 실제 자산 현황을 포함한 상세 정보를 제공하는 전문가용 버전입니다.
 
 ## `pro` 버전 주요 기능
@@ -41,11 +50,11 @@
 - **파일 위치**: `~/.debate300/api_keys.json` (macOS/Linux) 또는 `C:\Users\YOUR_USERNAME\.debate300\api_keys.json` (Windows)
 - **파일 내용 (수정 필요)**:
   `json
-    {
-      "bithumb_api_key": "YOUR_API_KEY",
-      "bithumb_secret_key": "YOUR_SECRET_KEY"
-    }
-    `
+  {
+    "bithumb_api_key": "YOUR_API_KEY",
+    "bithumb_secret_key": "YOUR_SECRET_KEY"
+  }
+  `
   **참고:** API 키가 설정되지 않은 상태로 프로그램을 실행하면, 키를 입력하라는 에러 메시지가 표시되고 프로그램이 종료됩니다.
 
 #### API 키 발급 방법
