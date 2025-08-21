@@ -254,7 +254,7 @@ function redrawTable(): void {
     }
   );
 
-  const displaySymbols =
+  const displaySymbols = 
     sortedSymbols.length > displayLimit
       ? sortedSymbols.slice(0, displayLimit)
       : sortedSymbols;
@@ -325,21 +325,21 @@ function redrawTable(): void {
     const highPriceNum = parseFloat(data.highPrice);
     const lowPriceNum = parseFloat(data.lowPrice);
 
-    const highPricePercent =
+    const highPricePercent = 
       prevClosePriceNum > 0
         ? ((highPriceNum - prevClosePriceNum) / prevClosePriceNum) * 100
         : 0;
-    const lowPricePercent =
+    const lowPricePercent = 
       prevClosePriceNum > 0
         ? ((lowPriceNum - prevClosePriceNum) / prevClosePriceNum) * 100
         : 0;
 
-    const highPriceDisplay = `${
+    const highPriceDisplay = `${ 
       highPricePercent >= 0
         ? chalk.green(`+${highPricePercent.toFixed(2)}%`)
         : chalk.red(`${highPricePercent.toFixed(2)}%`)
     } (${highPriceNum.toLocaleString("ko-KR")})`;
-    const lowPriceDisplay = `${
+    const lowPriceDisplay = `${ 
       lowPricePercent >= 0
         ? chalk.green(`+${lowPricePercent.toFixed(2)}%`)
         : chalk.red(`${lowPricePercent.toFixed(2)}%`)
@@ -387,7 +387,7 @@ function redrawTable(): void {
       sentimentColor = chalk.green;
     } else if (averageChange < -0.5) {
       // Threshold for significant downward trend
-      marketSentiment = "전체 시장: 강한 하락세 📉";
+      marketSentiment = "전체 시장: 강한 하락세 🙇";
       sentimentColor = chalk.red;
     } else if (averageChange < 0) {
       marketSentiment = "전체 시장: 하락세 📉";
@@ -399,7 +399,7 @@ function redrawTable(): void {
     const volumePowers = Object.values(realTimeData)
       .map((data) => parseFloat(data.volumePower))
       .filter((vp) => !isNaN(vp));
-    const averageVolumePower =
+    const averageVolumePower = 
       volumePowers.length > 0
         ? volumePowers.reduce((sum, vp) => sum + vp, 0) / volumePowers.length
         : 0;
@@ -409,20 +409,24 @@ function redrawTable(): void {
     sentimentColor = chalk.gray;
   }
 
-  // 화면을 지우고 다시 그릴 때 깜빡임 최소화
-  process.stdout.write("\x1B[?25l\x1B[H\x1B[J"); // 커서 숨기기, 홈으로 이동, 화면 지우기
-  console.log(
+  // 화면 출력을 위한 버퍼 생성
+  const output: string[] = [];
+  output.push(
     chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit) - Debate300.com")
   );
-  console.log(sentimentColor(marketSentiment)); // Display market sentiment
-  console.log(table.toString());
+  output.push(sentimentColor(marketSentiment)); // Display market sentiment
+  output.push(table.toString());
+
   if (sortedSymbols.length > displayLimit) {
-    console.log(
+    output.push(
       chalk.yellow(
         `참고: 시세 표시가 ${displayLimit}개로 제한되었습니다. (총 ${sortedSymbols.length}개)`
       )
     );
   }
+
+  // 콘솔을 지우고 한 번에 출력하여 깜빡임 최소화
+  process.stdout.write("\x1B[H\x1B[J" + output.join("\n"));
 }
 
 function connect(): void {
