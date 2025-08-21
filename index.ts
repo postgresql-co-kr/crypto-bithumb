@@ -8,6 +8,7 @@ import * as path from "path";
 import axios from "axios";
 import * as jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
+import notifier from "node-notifier";
 
 // Function to ensure config file exists
 function ensureConfigFile() {
@@ -452,6 +453,7 @@ let ws: WebSocket | null = null;
 const realTimeData: RealTimeData = {};
 let redrawTimeout: NodeJS.Timeout | null = null;
 const RECONNECT_INTERVAL = 5000; // 5 seconds
+const lastNotificationLevels: { [symbol: string]: { positive: number; negative: number } } = {};
 
 // 콘솔을 지우고 테이블을 다시 그리는 함수
 function redrawTable(): void {
@@ -842,6 +844,50 @@ function connect(): void {
 
       // 실시간 데이터 업데이트
       realTimeData[content.symbol] = content;
+
+      // Notification logic
+      const changeRate = parseFloat(content.chgRate);
+      const symbol = content.symbol;
+
+      if (!lastNotificationLevels[symbol]) {
+        lastNotificationLevels[symbol] = { positive: 0, negative: 0 };
+      }
+
+      const currentLevel = Math.floor(Math.abs(changeRate) / 5);
+
+      if (changeRate > 0) {
+        if (currentLevel > lastNotificationLevels[symbol].positive) {
+          const koreanName = marketInfo[symbol]?.korean_name || symbol;
+          const price = parseFloat(content.closePrice).toLocaleString("ko-KR");
+          const notificationLevel = currentLevel * 5;
+
+          notifier.notify({
+            title: `코인 가격 상승 알림`,
+            message: `${koreanName}이(가) ${notificationLevel}% 이상 상승했습니다. 현재가: ${price} KRW (${changeRate.toFixed(2)}%)`,
+            sound: true,
+            wait: false
+          });
+
+          lastNotificationLevels[symbol].positive = currentLevel;
+          lastNotificationLevels[symbol].negative = 0; // Reset negative level on positive change
+        }
+      } else if (changeRate < 0) {
+        if (currentLevel > lastNotificationLevels[symbol].negative) {
+          const koreanName = marketInfo[symbol]?.korean_name || symbol;
+          const price = parseFloat(content.closePrice).toLocaleString("ko-KR");
+          const notificationLevel = currentLevel * 5;
+
+          notifier.notify({
+            title: `코인 가격 하락 알림`,
+            message: `${koreanName}이(가) ${notificationLevel}% 이상 하락했습니다. 현재가: ${price} KRW (${changeRate.toFixed(2)}%)`,
+            sound: true,
+            wait: false
+          });
+
+          lastNotificationLevels[symbol].negative = currentLevel;
+          lastNotificationLevels[symbol].positive = 0; // Reset positive level on negative change
+        }
+      }
 
       // 깜빡임 감소를 위해 redrawTable 호출을 디바운스합니다. 따라서 redrawTable 호출을 디바운스합니다.
       if (!redrawTimeout) {
