@@ -916,14 +916,18 @@ function connect(): void {
 
   ws.on("close", () => {
     console.log(
-      chalk.yellow("WebSocket 연결이 종료되었습니다. 재연결을 시도합니다.")
+      chalk.yellow(
+        `WebSocket 연결이 종료되었습니다. ${ 
+          RECONNECT_INTERVAL / 1000
+        }초 후 재연결을 시도합니다.`
+      )
     );
     ws = null;
     if (redrawTimeout) {
-      // Clear redrawTimeout on close
       clearTimeout(redrawTimeout);
       redrawTimeout = null;
     }
+    setTimeout(connect, RECONNECT_INTERVAL);
   });
 }
 
@@ -933,11 +937,4 @@ initializeAppConfig().then(() => {
   if (apiConfig) {
     schedulePeriodicUpdates();
   }
-
-  // 주기적으로 WebSocket 연결을 확인하고 필요한 경우 다시 연결합니다.
-  setInterval(() => {
-    if (!ws || ws.readyState === WebSocket.CLOSED) {
-      connect();
-    }
-  }, RECONNECT_INTERVAL);
 });
