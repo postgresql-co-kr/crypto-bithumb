@@ -186,7 +186,7 @@ function loadConfig(): AppConfig {
   // Check for api_keys.json and handle it first
   if (!fs.existsSync(homeDirApiKeysPath)) {
     const defaultApiKeys = {
-      bithumb_api_key: "YOUR_CONNECT_KEY",
+      bithumb_api_key: "YOUR_API_KEY",
       bithumb_secret_key: "YOUR_SECRET_KEY",
     };
     fs.writeFileSync(
@@ -208,7 +208,7 @@ function loadConfig(): AppConfig {
 
   if (
     !apiConfig ||
-    apiConfig.bithumb_api_key === "YOUR_CONNECT_KEY" ||
+    apiConfig.bithumb_api_key === "YOUR_API_KEY" ||
     apiConfig.bithumb_secret_key === "YOUR_SECRET_KEY"
   ) {
     console.error(chalk.red("빗썸 API 키가 설정되지 않았습니다."));
@@ -345,13 +345,20 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
     } else {
       console.error(chalk.red(`Bithumb API Error: ${response.data.message}`));
       return [];
+    } 
+  } catch (error: any) { // Add : any to error for type checking
+    if (axios.isAxiosError(error) && error.response && error.response.status === 403) {
+      console.error(
+        chalk.red("빗썸 API 키에 등록된 IP 주소가 아닙니다. 빗썸 웹사이트에서 IP 주소를 확인하거나 등록해주세요.")
+      );
+      process.exit(1);
+    } else {
+      console.error(
+        chalk.red("Error fetching user holdings from Bithumb API:"),
+        error
+      );
+      return [];
     }
-  } catch (error) {
-    console.error(
-      chalk.red("Error fetching user holdings from Bithumb API:"),
-      error
-    );
-    return [];
   }
 }
 
@@ -538,7 +545,7 @@ function redrawTable(): void {
     return rateB - rateA;
   });
 
-  const displaySymbols =
+  const displaySymbols = 
     sortedSymbols.length > displayLimit
       ? sortedSymbols.slice(0, displayLimit)
       : sortedSymbols;
@@ -661,12 +668,12 @@ function redrawTable(): void {
         ? ((lowPriceNum - prevClosePriceNum) / prevClosePriceNum) * 100
         : 0;
 
-    const highPriceDisplay = `${
+    const highPriceDisplay = `${ 
       highPricePercent >= 0
         ? chalk.green(`+${highPricePercent.toFixed(2)}%`)
         : chalk.red(`${highPricePercent.toFixed(2)}%`)
     } (${highPriceNum.toLocaleString("ko-KR")})`;
-    const lowPriceDisplay = `${
+    const lowPriceDisplay = `${ 
       lowPricePercent >= 0
         ? chalk.green(`+${lowPricePercent.toFixed(2)}%`)
         : chalk.red(`${lowPricePercent.toFixed(2)}%`)
@@ -722,7 +729,7 @@ function redrawTable(): void {
       sentimentColor = chalk.green;
     } else if (averageChange < -0.5) {
       // Threshold for significant downward trend
-      marketSentiment = "전체 시장: 강한 하락세 📉";
+      marketSentiment = "전체 시장: 강한 하락세 🙇";
       sentimentColor = chalk.red;
     } else if (averageChange < 0) {
       marketSentiment = "전체 시장: 하락세 📉";
@@ -784,20 +791,24 @@ function redrawTable(): void {
     sentimentColor = chalk.gray;
   }
 
-  // 콘솔을 지우고 테이블 출력 (깜빡임 방지)
-  process.stdout.write("\x1B[?25l\x1B[H\x1B[J"); // 커서 숨기기, 홈으로 이동, 화면 지우기
-  console.log(
-    chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit) - debate300.com")
+  // 화면 출력을 위한 버퍼 생성
+  const output: string[] = [];
+  output.push(
+    chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit) - Debate300.com")
   );
-  console.log(sentimentColor(marketSentiment)); // Display market sentiment
-  console.log(table.toString());
+  output.push(sentimentColor(marketSentiment)); // Display market sentiment
+  output.push(table.toString());
+
   if (sortedSymbols.length > displayLimit) {
-    console.log(
+    output.push(
       chalk.yellow(
         `참고: 시세 표시가 ${displayLimit}개로 제한되었습니다. (총 ${sortedSymbols.length}개)`
       )
     );
   }
+
+  // 콘솔을 지우고 한 번에 출력하여 깜빡임 최소화
+  process.stdout.write("\x1B[H\x1B[J" + output.join("\n"));
 }
 
 function connect(): void {
