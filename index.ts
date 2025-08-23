@@ -278,7 +278,7 @@ function redrawTable(): void {
     if (currentClosePrice > prevPrice) {
       priceColor = chalk.redBright; // Price increased
     } else if (currentClosePrice < prevPrice) {
-      priceColor = chalk.blueBright; // Price decreased
+      priceColor = chalk.cyanBright; // Price decreased
     }
 
     let rateColor = chalk.white;
