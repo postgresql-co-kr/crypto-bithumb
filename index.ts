@@ -9,6 +9,7 @@ import axios from "axios";
 import * as jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import notifier from "node-notifier";
+import { exec } from "child_process";
 
 // Function to ensure config file exists
 function ensureConfigFile() {
@@ -811,6 +812,30 @@ function redrawTable(): void {
   process.stdout.write("\x1B[H\x1B[J" + output.join("\n"));
 }
 
+function sendNotification(title: string, message: string) {
+  if (os.platform() === 'darwin') {
+    const escapedTitle = title.replace(/"/g, '\\"');
+    const escapedMessage = message.replace(/"/g, '\\"');
+    const command = `osascript -e 'display notification "${escapedMessage}" with title "${escapedTitle}" sound name "Ping"'`;
+    exec(command, (error) => {
+      if (error) {
+        console.error(`[Notification Error] Failed to execute osascript. Please ensure you are on macOS and that your terminal has notification permissions.`);
+        console.error(`[Notification Error] Details: ${error.message}`);
+      }
+    });
+  } else {
+    // Fallback to node-notifier for other platforms
+    new notifier.NotificationCenter().notify({
+      title: title,
+      message: message,
+      sound: true,
+      wait: false
+    }, function (error, response) {
+      if (error) console.error("Notification Error:", error);
+    });
+  }
+}
+
 function connect(): void {
   // Prevent multiple connection attempts if one is already connecting or open
   if (
@@ -872,12 +897,9 @@ function connect(): void {
           const price = parseFloat(content.closePrice).toLocaleString("ko-KR");
           const notificationLevel = currentLevel * 5;
 
-          notifier.notify({
-            title: `코인 가격 상승 알림`,
-            message: `${koreanName}이(가) ${notificationLevel}% 이상 상승했습니다. 현재가: ${price} KRW (${changeRate.toFixed(2)}%)`,
-            sound: true,
-            wait: false
-          });
+          const title = `코인 가격 상승 알림`;
+          const message = `${koreanName}이(가) ${notificationLevel}% 이상 상승했습니다. 현재가: ${price} KRW (${changeRate.toFixed(2)}%)`;
+          sendNotification(title, message);
 
           lastNotificationLevels[symbol].positive = currentLevel;
           lastNotificationLevels[symbol].negative = 0; // Reset negative level on positive change
@@ -888,12 +910,9 @@ function connect(): void {
           const price = parseFloat(content.closePrice).toLocaleString("ko-KR");
           const notificationLevel = currentLevel * 5;
 
-          notifier.notify({
-            title: `코인 가격 하락 알림`,
-            message: `${koreanName}이(가) ${notificationLevel}% 이상 하락했습니다. 현재가: ${price} KRW (${changeRate.toFixed(2)}%)`,
-            sound: true,
-            wait: false
-          });
+          const title = `코인 가격 하락 알림`;
+          const message = `${koreanName}이(가) ${notificationLevel}% 이상 하락했습니다. 현재가: ${price} KRW (${changeRate.toFixed(2)}%)`;
+          sendNotification(title, message);
 
           lastNotificationLevels[symbol].negative = currentLevel;
           lastNotificationLevels[symbol].positive = 0; // Reset positive level on negative change
