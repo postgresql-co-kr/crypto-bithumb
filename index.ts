@@ -170,6 +170,7 @@ let krwLocked: number = 0;
 
 let appConfig: AppConfig;
 let apiConfig: ApiConfig | null = null;
+let fetchUserHoldingsErrorCount = 0;
 
 function loadConfig(): AppConfig {
   const currentDirConfigPath = path.join(process.cwd(), "config.json");
@@ -312,6 +313,7 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
     });
 
     if (response.status === 200) {
+      fetchUserHoldingsErrorCount = 0; // 성공 시 에러 카운터 리셋
       // status 확인 조건 추가
       const data = response.data; // response.data.data 사용
       const userHoldings: CoinConfig[] = [];
@@ -344,22 +346,28 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
       // console.log(chalk.green("Successfully fetched user holdings from Bithumb API."));
       return userHoldings;
     } else {
-      console.error(chalk.red(`Bithumb API Error: ${response.data.message}`));
+      fetchUserHoldingsErrorCount++;
+      if (fetchUserHoldingsErrorCount === 1 || fetchUserHoldingsErrorCount >= 3) {
+        console.error(chalk.red(`Bithumb API Error: ${response.data.message}`));
+      }
       return [];
     } 
   } catch (error: any) { // Add : any to error for type checking
+    fetchUserHoldingsErrorCount++;
     if (axios.isAxiosError(error) && error.response && error.response.status === 403) {
       console.error(
         chalk.red("빗썸 API 키에 등록된 IP 주소가 아닙니다. 빗썸 웹사이트에서 IP 주소를 확인하거나 등록해주세요.")
       );
       process.exit(1);
-    } else {
+    }
+    
+    if (fetchUserHoldingsErrorCount === 1 || fetchUserHoldingsErrorCount >= 3) {
       console.error(
         chalk.red("Error fetching user holdings from Bithumb API:"),
         error
       );
-      return [];
     }
+    return [];
   }
 }
 
@@ -814,8 +822,8 @@ function redrawTable(): void {
 
 function sendNotification(title: string, message: string) {
   if (os.platform() === 'darwin') {
-    const escapedTitle = title.replace(/"/g, '\\"');
-    const escapedMessage = message.replace(/"/g, '\\"');
+    const escapedTitle = title.replace(/"/g, '"');
+    const escapedMessage = message.replace(/"/g, '"');
     const command = `osascript -e 'display notification "${escapedMessage}" with title "${escapedTitle}" sound name "Ping"'`;
     exec(command, (error) => {
       if (error) {
