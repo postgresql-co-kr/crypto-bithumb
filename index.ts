@@ -10,6 +10,12 @@ import * as jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import notifier from "node-notifier";
 import { exec } from "child_process";
+import * as readline from "readline";
+import * as crypto from "crypto";
+import { URLSearchParams } from "url";
+import * as querystring from "querystring";
+
+let currentView: "market" | "open_orders" = "market";
 
 // Function to ensure config file exists
 function ensureConfigFile() {
@@ -150,6 +156,24 @@ interface TickerContent {
   lastClosePrice?: string; // (사용자 추가) 직전 종가 비교용 등 내부 계산 편의 필드
 }
 
+interface OpenOrderItem {
+  uuid: string;
+  side: "ask" | "bid";
+  ord_type: "limit" | "market" | "stop_limit";
+  price: string | null;
+  state: "wait" | "watch" | "done" | "cancel";
+  market: string;
+  created_at: string;
+  volume: string | null;
+  remaining_volume: string | null;
+  reserved_fee: string;
+  remaining_fee: string;
+  paid_fee: string;
+  locked: string;
+  executed_volume: string;
+  trades_count: number;
+}
+
 interface Accounts {
   currency: string; // symbol
   balance: string; // 보유 수량
@@ -171,6 +195,12 @@ let krwLocked: number = 0;
 let appConfig: AppConfig;
 let apiConfig: ApiConfig | null = null;
 let fetchUserHoldingsErrorCount = 0;
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  prompt: "> ",
+});
 
 function loadConfig(): AppConfig {
   const currentDirConfigPath = path.join(process.cwd(), "config.json");
@@ -347,21 +377,36 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
       return userHoldings;
     } else {
       fetchUserHoldingsErrorCount++;
-      if (fetchUserHoldingsErrorCount === 1 || fetchUserHoldingsErrorCount >= 3) {
-        console.error(chalk.red(`Bithumb API Error: ${response.data.message}`));
+      if (
+        fetchUserHoldingsErrorCount === 1 ||
+        fetchUserHoldingsErrorCount >= 3
+      ) {
+        console.error(
+          chalk.red(`Bithumb API Error: ${response.data.message}`)
+        );
       }
       return [];
     } 
-  } catch (error: any) { // Add : any to error for type checking
+  } catch (error: any) {
+    // Add : any to error for type checking
     fetchUserHoldingsErrorCount++;
-    if (axios.isAxiosError(error) && error.response && error.response.status === 403) {
+    if (
+      axios.isAxiosError(error) &&
+      error.response &&
+      error.response.status === 403
+    ) {
       console.error(
-        chalk.red("빗썸 API 키에 등록된 IP 주소가 아닙니다. 빗썸 웹사이트에서 IP 주소를 확인하거나 등록해주세요.")
+        chalk.red(
+          "빗썸 API 키에 등록된 IP 주소가 아닙니다. 빗썸 웹사이트에서 IP 주소를 확인하거나 등록해주세요."
+        )
       );
       process.exit(1);
     }
-    
-    if (fetchUserHoldingsErrorCount === 1 || fetchUserHoldingsErrorCount >= 3) {
+
+    if (
+      fetchUserHoldingsErrorCount === 1 ||
+      fetchUserHoldingsErrorCount >= 3
+    ) {
       console.error(
         chalk.red("Error fetching user holdings from Bithumb API:"),
         error
@@ -469,10 +514,12 @@ let ws: WebSocket | null = null;
 const realTimeData: RealTimeData = {};
 let redrawTimeout: NodeJS.Timeout | null = null;
 const RECONNECT_INTERVAL = 5000; // 5 seconds
-const lastNotificationLevels: { [symbol: string]: { positive: number; negative: number } } = {};
+const lastNotificationLevels: {
+  [symbol: string]: { positive: number; negative: number };
+} = {};
 
 // 콘솔을 지우고 테이블을 다시 그리는 함수
-function redrawTable(): void {
+function drawMarketView(): void {
   let totalEvaluationAmount = 0;
   let totalProfitLossAmount = 0;
   let totalPurchaseAmount = 0;
@@ -540,8 +587,10 @@ function redrawTable(): void {
       return a.localeCompare(b); // 이름순
     }
     if (sortBy === "my") {
-      const balanceA = (coinAConfig?.balance || 0) + (coinAConfig?.locked || 0);
-      const balanceB = (coinBConfig?.balance || 0) + (coinBConfig?.locked || 0);
+      const balanceA =
+        (coinAConfig?.balance || 0) + (coinAConfig?.locked || 0);
+      const balanceB =
+        (coinBConfig?.balance || 0) + (coinBConfig?.locked || 0);
       const priceA = parseFloat(dataA?.closePrice || "0");
       const priceB = parseFloat(dataB?.closePrice || "0");
       const valueA = balanceA * priceA;
@@ -554,7 +603,7 @@ function redrawTable(): void {
     return rateB - rateA;
   });
 
-  const displaySymbols = 
+  const displaySymbols =
     sortedSymbols.length > displayLimit
       ? sortedSymbols.slice(0, displayLimit)
       : sortedSymbols;
@@ -803,7 +852,9 @@ function redrawTable(): void {
   // 화면 출력을 위한 버퍼 생성
   const output: string[] = [];
   output.push(
-    chalk.bold("Bithumb 실시간 시세 (Ctrl+C to exit) - Debate300.com")
+    chalk.bold(
+      "Bithumb 실시간 시세 (메뉴: /1:시세, /2:미체결, Ctrl+C:종료) - Debate300.com"
+    )
   );
   output.push(sentimentColor(marketSentiment)); // Display market sentiment
   output.push(table.toString());
@@ -816,31 +867,222 @@ function redrawTable(): void {
     );
   }
 
-  // 콘솔을 지우고 한 번에 출력하여 깜빡임 최소화
-  process.stdout.write("\x1B[H\x1B[J" + output.join("\n"));
+  readline.cursorTo(process.stdout, 0, 0);
+  readline.clearScreenDown(process.stdout);
+  process.stdout.write(output.join("\n"));
+
+  process.stdout.write("\n명령어: /1(시세), /2(미체결), /exit(종료)");
+  rl.prompt(true);
 }
 
+async function fetchOpenOrders(): Promise<OpenOrderItem[]> {
+  if (!apiConfig) {
+    return [];
+  }
+
+  const endpoint = "/v1/orders";
+  const queryParams: any = {
+    limit: 100,
+    page: 1,
+    order_by: "desc",
+    // states: ["wait", "watch"], // 미체결 상태
+  };
+
+  const query = querystring.stringify(queryParams);
+
+  const alg = "SHA512";
+  const hash = crypto.createHash(alg);
+  const queryHash = hash.update(query, "utf-8").digest("hex");
+
+  const payload = {
+    access_key: apiConfig.bithumb_api_key,
+    nonce: uuidv4(),
+    timestamp: Date.now(),
+    query_hash: queryHash,
+    query_hash_alg: alg,
+  };
+
+  const jwtToken = jwt.sign(payload, apiConfig.bithumb_secret_key);
+
+  const config = {
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+  };
+
+  try {
+    const response = await axios.get(
+      `${BITHUMB_API_BASE_URL}${endpoint}?${query}`,
+      config
+    );
+    if (response.status === 200) {
+      return response.data as OpenOrderItem[];
+    }
+    return [];
+  } catch (error: any) {
+    // console.error(
+    //   "Error fetching open orders:",
+    //   error.response ? error.response.data : error.message
+    // );
+    return [];
+  }
+}
+
+async function drawOpenOrdersView() {
+  readline.cursorTo(process.stdout, 0, 0);
+  readline.clearScreenDown(process.stdout);
+  process.stdout.write("미체결 내역을 불러오는 중...");
+
+  const openOrders = await fetchOpenOrders();
+
+  const table = new Table({
+    head: [
+      "코인",
+      "주문종류",
+      "현재가",
+      "주문가격",
+      "괴리율",
+      "주문수량",
+      "미체결수량",
+      "총 금액",
+      "주문일시",
+    ],
+    colWidths: [24, 10, 18, 18, 12, 15, 15, 20, 25],
+  });
+
+  if (openOrders.length === 0) {
+    table.push([{ colSpan: 9, content: "미체결 내역이 없습니다." }]);
+  } else {
+    openOrders.sort((a, b) => {
+      if (a.market < b.market) {
+        return -1;
+      }
+      if (a.market > b.market) {
+        return 1;
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
+    for (const order of openOrders) {
+      const marketParts = order.market.split("-");
+      const symbolForLookup = `${marketParts[1]}_${marketParts[0]}`;
+
+      const koreanName = marketInfo[symbolForLookup]?.korean_name;
+      const displayName = koreanName
+        ? `${symbolForLookup.replace("_KRW", "")} ${koreanName}`
+        : symbolForLookup;
+
+      let currentPrice = 0;
+      const currentTicker = realTimeData[symbolForLookup];
+
+      if (currentTicker) {
+        currentPrice = parseFloat(currentTicker.closePrice);
+      } else {
+        try {
+          const tickerResponse = await axios.get(
+            `${BITHUMB_API_BASE_URL}/public/ticker/${symbolForLookup}`
+          );
+          if (tickerResponse.data.status === "0000") {
+            currentPrice = parseFloat(tickerResponse.data.data.closing_price);
+          }
+        } catch (e) {
+          /* ignore */
+        }
+      }
+
+      const currentPriceDisplay =
+        currentPrice > 0 ? currentPrice.toLocaleString("ko-KR") : "N/A";
+
+      const orderPrice = parseFloat(order.price || "0");
+
+      let discrepancyRate = "-";
+      let discrepancyColor = chalk.white;
+      if (currentPrice > 0 && orderPrice > 0) {
+        const rate = ((orderPrice - currentPrice) / currentPrice) * 100;
+        if (rate > 0) {
+          discrepancyColor = chalk.green;
+          discrepancyRate = `+${rate.toFixed(2)}%`;
+        } else if (rate < 0) {
+          discrepancyColor = chalk.red;
+          discrepancyRate = `${rate.toFixed(2)}%`;
+        } else {
+          discrepancyRate = `${rate.toFixed(2)}%`;
+        }
+      }
+
+      const orderType =
+        order.side === "bid" ? chalk.red("매수") : chalk.cyan("매도");
+      const orderPriceDisplay = orderPrice.toLocaleString("ko-KR");
+      const volume = parseFloat(order.volume || "0").toLocaleString("ko-KR");
+      const remaining_volume = parseFloat(
+        order.remaining_volume || "0"
+      ).toLocaleString("ko-KR");
+      const total = (
+        orderPrice * parseFloat(order.volume || "0")
+      ).toLocaleString("ko-KR", { maximumFractionDigits: 0 });
+      const date = new Date(order.created_at).toLocaleString("ko-KR");
+
+      const coinConfig = appConfig.coins.find(
+        (c) => `${c.symbol}_${c.unit_currency || "KRW"}` === symbolForLookup
+      );
+      const icon: string = coinConfig?.icon || iconMap[symbolForLookup] || " ";
+      table.push([
+        chalk.yellow(`${icon} ${displayName}`),
+        orderType,
+        `${currentPriceDisplay} ${marketParts[0]}`,
+        `${orderPriceDisplay} ${marketParts[0]}`,
+        discrepancyColor(discrepancyRate),
+        volume,
+        remaining_volume,
+        `${total} ${marketParts[0]}`,
+        date,
+      ]);
+    }
+  }
+
+  const output: string[] = [];
+  output.push(
+    chalk.bold(
+      "Bithumb 미체결 내역 (메뉴: /1:시세, /2:미체결, Ctrl+C:종료) - Debate300.com"
+    )
+  );
+  output.push(table.toString());
+
+  readline.cursorTo(process.stdout, 0, 0);
+  readline.clearScreenDown(process.stdout);
+  process.stdout.write(output.join("\n"));
+
+  process.stdout.write("\n명령어: /1(시세), /2(미체결), /exit(종료)");
+  rl.prompt(true);
+}
+
+
 function sendNotification(title: string, message: string) {
-  if (os.platform() === 'darwin') {
+  if (os.platform() === "darwin") {
     const escapedTitle = title.replace(/"/g, '"');
     const escapedMessage = message.replace(/"/g, '"');
     const command = `osascript -e 'display notification "${escapedMessage}" with title "${escapedTitle}" sound name "Ping"'`;
     exec(command, (error) => {
       if (error) {
-        console.error(`[Notification Error] Failed to execute osascript. Please ensure you are on macOS and that your terminal has notification permissions.`);
+        console.error(
+          `[Notification Error] Failed to execute osascript. Please ensure you are on macOS and that your terminal has notification permissions.`
+        );
         console.error(`[Notification Error] Details: ${error.message}`);
       }
     });
   } else {
     // Fallback to node-notifier for other platforms
-    new notifier.NotificationCenter().notify({
-      title: title,
-      message: message,
-      sound: true,
-      wait: false
-    }, function (error, response) {
-      if (error) console.error("Notification Error:", error);
-    });
+    new notifier.NotificationCenter().notify(
+      {
+        title: title,
+        message: message,
+        sound: true,
+        wait: false,
+      },
+      function (error, response) {
+        if (error) console.error("Notification Error:", error);
+      }
+    );
   }
 }
 
@@ -906,7 +1148,9 @@ function connect(): void {
           const notificationLevel = currentLevel * 5;
 
           const title = `코인 가격 상승 알림`;
-          const message = `${koreanName}이(가) ${notificationLevel}% 이상 상승했습니다. 현재가: ${price} KRW (${changeRate.toFixed(2)}%)`;
+          const message = `${koreanName}이(가) ${notificationLevel}% 이상 상승했습니다. 현재가: ${price} KRW (${changeRate.toFixed(
+            2
+          )}%)`;
           sendNotification(title, message);
 
           lastNotificationLevels[symbol].positive = currentLevel;
@@ -919,7 +1163,9 @@ function connect(): void {
           const notificationLevel = currentLevel * 5;
 
           const title = `코인 가격 하락 알림`;
-          const message = `${koreanName}이(가) ${notificationLevel}% 이상 하락했습니다. 현재가: ${price} KRW (${changeRate.toFixed(2)}%)`;
+          const message = `${koreanName}이(가) ${notificationLevel}% 이상 하락했습니다. 현재가: ${price} KRW (${changeRate.toFixed(
+            2
+          )}%)`;
           sendNotification(title, message);
 
           lastNotificationLevels[symbol].negative = currentLevel;
@@ -927,12 +1173,13 @@ function connect(): void {
         }
       }
 
-      // 깜빡임 감소를 위해 redrawTable 호출을 디바운스합니다. 따라서 redrawTable 호출을 디바운스합니다.
-      if (!redrawTimeout) {
-        redrawTimeout = setTimeout(() => {
-          redrawTable();
-          redrawTimeout = null;
-        }, 100); // 100ms 간격으로 다시 그립니다.
+      if (currentView === "market") {
+        if (!redrawTimeout) {
+          redrawTimeout = setTimeout(() => {
+            drawMarketView();
+            redrawTimeout = null;
+          }, 100); // 100ms 간격으로 다시 그립니다.
+        }
       }
     }
   });
@@ -964,4 +1211,34 @@ initializeAppConfig().then(() => {
   if (apiConfig) {
     schedulePeriodicUpdates();
   }
+
+  rl.on("line", (line) => {
+    const command = line.trim().toLowerCase();
+    switch (command) {
+      case "/1":
+      case "/시세":
+        currentView = "market";
+        drawMarketView();
+        break;
+      case "/2":
+      case "/미체결":
+        currentView = "open_orders";
+        drawOpenOrdersView();
+        break;
+      case "/exit":
+        process.exit(0);
+        break;
+      default:
+        if (command.startsWith("/")) {
+          process.stdout.write(
+            "알 수 없는 명령어입니다. 사용 가능한 명령어: /1, /2, /exit\n"
+          );
+        }
+        rl.prompt();
+    }
+  }).on("close", () => {
+    process.exit(0);
+  });
+
+  drawMarketView();
 });
