@@ -942,16 +942,19 @@ async function drawOpenOrdersView() {
       "현재가",
       "주문가격",
       "괴리율",
+      "평균매수가",
+      "현재수익률",
+      "예상수익률",
       "주문수량",
       "미체결수량",
       "총 금액",
       "주문일시",
     ],
-    colWidths: [24, 10, 18, 18, 12, 15, 15, 20, 25],
+    colWidths: [24, 10, 18, 18, 12, 18, 12, 12, 15, 15, 20, 25],
   });
 
   if (openOrders.length === 0) {
-    table.push([{ colSpan: 9, content: "미체결 내역이 없습니다." }]);
+    table.push([{ colSpan: 12, content: "미체결 내역이 없습니다." }]);
   } else {
     openOrders.sort((a, b) => {
       if (a.market < b.market) {
@@ -1026,15 +1029,63 @@ async function drawOpenOrdersView() {
         (c) => `${c.symbol}_${c.unit_currency || "KRW"}` === symbolForLookup
       );
       const icon: string = coinConfig?.icon || iconMap[symbolForLookup] || " ";
+
+      let avgPurchasePriceDisplay = "-";
+      let profitLossRateDisplay = "-";
+      let profitLossColor = chalk.white;
+
+      if (coinConfig && coinConfig.averagePurchasePrice > 0) {
+        const avgPrice = coinConfig.averagePurchasePrice;
+        avgPurchasePriceDisplay = avgPrice.toLocaleString("ko-KR");
+
+        if (currentPrice > 0) {
+          const rate = ((currentPrice - avgPrice) / avgPrice) * 100;
+          if (rate > 0) {
+            profitLossColor = chalk.green;
+            profitLossRateDisplay = `+${rate.toFixed(2)}%`;
+          } else if (rate < 0) {
+            profitLossColor = chalk.red;
+            profitLossRateDisplay = `${rate.toFixed(2)}%`;
+          } else {
+            profitLossRateDisplay = `${rate.toFixed(2)}%`;
+          }
+        }
+      }
+
+      let expectedProfitRateDisplay = "-";
+      let expectedProfitRateColor = chalk.white;
+      if (
+        order.side === "ask" &&
+        coinConfig &&
+        coinConfig.averagePurchasePrice > 0 &&
+        orderPrice > 0
+      ) {
+        const avgPrice = coinConfig.averagePurchasePrice;
+        const expectedRate = ((orderPrice - avgPrice) / avgPrice) * 100;
+
+        if (expectedRate > 0) {
+          expectedProfitRateColor = chalk.green;
+          expectedProfitRateDisplay = `+${expectedRate.toFixed(2)}%`;
+        } else if (expectedRate < 0) {
+          expectedProfitRateColor = chalk.red;
+          expectedProfitRateDisplay = `${expectedRate.toFixed(2)}%`;
+        } else {
+          expectedProfitRateDisplay = `${expectedRate.toFixed(2)}%`;
+        }
+      }
+
       table.push([
         chalk.yellow(`${icon} ${displayName}`),
         orderType,
-        `${currentPriceDisplay} ${marketParts[0]}`,
-        `${orderPriceDisplay} ${marketParts[0]}`,
+        `${currentPriceDisplay} ${marketParts[0]}`, 
+        `${orderPriceDisplay} ${marketParts[0]}`, 
         discrepancyColor(discrepancyRate),
+        avgPurchasePriceDisplay,
+        profitLossColor(profitLossRateDisplay),
+        expectedProfitRateColor(expectedProfitRateDisplay),
         volume,
         remaining_volume,
-        `${total} ${marketParts[0]}`,
+        `${total} ${marketParts[0]}`, 
         date,
       ]);
     }
