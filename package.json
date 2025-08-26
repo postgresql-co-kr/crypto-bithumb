@@ -30,7 +30,7 @@
   ],
   "author": "debate300",
   "license": "ISC",
-  "homepage": "https://debate300.com",
+  "homepage": "https://m.debate300.com",
   "packageManager": "pnpm@10.12.4",
   "dependencies": {
     "@types/node-notifier": "^8.0.5",
