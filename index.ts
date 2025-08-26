@@ -1123,7 +1123,7 @@ function sendNotification(title: string, message: string) {
     });
   } else {
     // Fallback to node-notifier for other platforms
-    new notifier.NotificationCenter().notify(
+    notifier.notify(
       {
         title: title,
         message: message,
