@@ -9,7 +9,8 @@
   },
   "files": [
     "dist",
-    "config.json-top30"
+    "config.json-top30",
+    "config.json-top50"
   ],
   "repository": {
     "type": "git",

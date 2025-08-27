@@ -52,11 +52,11 @@ npm i -g @debate300/bithumb-pro
 - **파일 위치**: `~/.debate300/api_keys.json` (macOS/Linux) 또는 `C:\Users\YOUR_USERNAME\.debate300\api_keys.json` (Windows)
 - **파일 내용 (수정 필요)**:
   `json
-  {
-    "bithumb_api_key": "YOUR_API_KEY",
-    "bithumb_secret_key": "YOUR_SECRET_KEY"
-  }
-  `
+{
+  "bithumb_api_key": "YOUR_API_KEY",
+  "bithumb_secret_key": "YOUR_SECRET_KEY"
+}
+`
   **참고:** API 키가 설정되지 않은 상태로 프로그램을 실행하면, 키를 입력하라는 에러 메시지가 표시되고 프로그램이 종료됩니다.
 
 #### API 키 발급 방법
@@ -143,4 +143,4 @@ Bithumb 실시간 시세 (Ctrl+C to exit)
 
 ## 라이선스
 
-이 프로젝트는 ISC 라이선스를 따릅니다.
+이 프로젝트는 MIT 라이선스를 따릅니다.
