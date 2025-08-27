@@ -1,6 +1,6 @@
 {
   "name": "@debate300/bithumb",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A real-time cryptocurrency price tracker for Bithumb.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
