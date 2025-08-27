@@ -212,7 +212,20 @@ async function fetchMarketInfo(): Promise<void> {
         }
       });
     }
-  } catch (error) {
+  } catch (error: any) {
+    if (axios.isAxiosError(error) && error.code === "ENOTFOUND") {
+      console.error(
+        chalk.red(
+          "네트워크 연결에 문제가 있어 빗썸 서버에 접속할 수 없습니다."
+        )
+      );
+      console.error(
+        chalk.yellow(
+          "인터넷 연결을 확인한 후 프로그램을 다시 시작해주세요."
+        )
+      );
+      process.exit(1);
+    }
     // console.error(chalk.red("한글 코인 이름 로딩 오류:"), error);
   }
 }
