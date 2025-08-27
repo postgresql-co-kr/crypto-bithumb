@@ -51,7 +51,8 @@ ensureConfigFile();
 // 커맨드 라인 인수 처리
 const args = process.argv.slice(2);
 let sortBy = "rate"; // 기본 정렬: 변동률
-let displayLimit = 30; // 기본 표시 갯수
+let displayLimit = 0; // 기본 표시 갯수, 0이면 동적 조절
+let limitWasSetByUser = false;
 
 const sortByArgIndex = args.indexOf("--sort-by");
 if (sortByArgIndex > -1 && args[sortByArgIndex + 1]) {
@@ -73,12 +74,13 @@ if (limitArgIndex > -1 && args[limitArgIndex + 1]) {
   const limitArg = parseInt(args[limitArgIndex + 1], 10);
   if (!isNaN(limitArg) && limitArg > 0) {
     displayLimit = limitArg;
+    limitWasSetByUser = true;
   } else {
     console.log(
       chalk.yellow(
         `Warning: Invalid limit option '${
           args[limitArgIndex + 1]
-        }'. Using default of ${displayLimit}.`
+        }'. Using dynamic limit.`
       )
     );
   }
@@ -225,6 +227,31 @@ const lastNotificationLevels: { [symbol: string]: { positive: number; negative: 
 
 // 콘솔을 지우고 테이블을 다시 그리는 함수
 function redrawTable(): void {
+  // Handle dynamic display limit
+  let currentDisplayLimit = displayLimit;
+  if (!limitWasSetByUser) {
+    const terminalHeight = process.stdout.rows || 30;
+    // Reserve ~8 lines for header, footer, and other info
+    const availableRows = terminalHeight - 8;
+    currentDisplayLimit = Math.max(1, availableRows);
+  }
+
+  const terminalWidth = process.stdout.columns ? process.stdout.columns : 150;
+  // 전체 너비에서 컬럼 구분선 너비(컬럼수 + 1)와 약간의 여백을 뺍니다.
+  const availableWidth = terminalWidth - (9 + 1) - 10;
+
+  const colWidths = [
+    Math.max(18, Math.floor(availableWidth * 0.18)), // 코인 (이름이 길 수 있으므로)
+    Math.max(15, Math.floor(availableWidth * 0.12)), // 현재가
+    Math.max(10, Math.floor(availableWidth * 0.08)),  // 체결강도
+    Math.max(10, Math.floor(availableWidth * 0.08)),  // 수익률
+    Math.max(12, Math.floor(availableWidth * 0.09)), // 전일대비
+    Math.max(15, Math.floor(availableWidth * 0.11)), // 전일대비금액
+    Math.max(15, Math.floor(availableWidth * 0.11)), // 전일종가
+    Math.max(18, Math.floor(availableWidth * 0.12)), // 고가 (내용이 길어짐)
+    Math.max(18, Math.floor(availableWidth * 0.11)), // 저가 (내용이 길어짐)
+  ];
+
   // 테이블 생성
   const table = new Table({
     head: [
@@ -238,7 +265,8 @@ function redrawTable(): void {
       chalk.magentaBright("고가"), // High Price
       chalk.magentaBright("저가"), // Low Price
     ],
-    colWidths: [22, 15, 10, 10, 15, 18, 15, 20, 20],
+    colWidths: colWidths,
+    wordWrap: true,
   });
 
   // 저장된 실시간 데이터로 테이블 채우기
@@ -256,8 +284,8 @@ function redrawTable(): void {
   );
 
   const displaySymbols = 
-    sortedSymbols.length > displayLimit
-      ? sortedSymbols.slice(0, displayLimit)
+    sortedSymbols.length > currentDisplayLimit
+      ? sortedSymbols.slice(0, currentDisplayLimit)
       : sortedSymbols;
 
   for (const symbol of displaySymbols) {
@@ -418,10 +446,10 @@ function redrawTable(): void {
   output.push(sentimentColor(marketSentiment)); // Display market sentiment
   output.push(table.toString());
 
-  if (sortedSymbols.length > displayLimit) {
+  if (sortedSymbols.length > currentDisplayLimit) {
     output.push(
       chalk.yellow(
-        `참고: 시세 표시가 ${displayLimit}개로 제한되었습니다. (총 ${sortedSymbols.length}개)`
+        `참고: 시세 표시가 ${currentDisplayLimit}개로 제한되었습니다. (총 ${sortedSymbols.length}개)`
       )
     );
   }
@@ -553,6 +581,17 @@ async function start() {
 
 // 프로그램 시작
 start();
+
+// Listen for terminal resize events to make the table responsive
+process.stdout.on('resize', () => {
+  if (!redrawTimeout) {
+    // Debounce redraw to avoid excessive calls
+    redrawTimeout = setTimeout(() => {
+      redrawTable();
+      redrawTimeout = null;
+    }, 100);
+  }
+});
 
 // Graceful shutdown
 process.on("SIGINT", () => {

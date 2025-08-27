@@ -28,7 +28,7 @@
     "bithumb"
   ],
   "author": "debate300",
-  "license": "ISC",
+  "license": "MIT",
   "homepage": "https://m.debate300.com",
   "packageManager": "pnpm@10.12.4",
   "dependencies": {

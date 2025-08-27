@@ -264,4 +264,4 @@ Bithumb 실시간 시세 (Ctrl+C to exit) - Debate300.com
 
 ## 라이선스
 
-이 프로젝트는 ISC 라이선스를 따릅니다.
+이 프로젝트는 MIT 라이선스를 따릅니다.
