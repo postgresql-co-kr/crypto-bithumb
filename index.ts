@@ -381,12 +381,10 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
         fetchUserHoldingsErrorCount === 1 ||
         fetchUserHoldingsErrorCount >= 3
       ) {
-        console.error(
-          chalk.red(`Bithumb API Error: ${response.data.message}`)
-        );
+        console.error(chalk.red(`Bithumb API Error: ${response.data.message}`));
       }
       return [];
-    } 
+    }
   } catch (error: any) {
     // Add : any to error for type checking
     fetchUserHoldingsErrorCount++;
@@ -405,9 +403,7 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
 
     if (axios.isAxiosError(error) && error.code === "ENOTFOUND") {
       console.error(
-        chalk.red(
-          "네트워크 연결에 문제가 있어 빗썸 서버에 접속할 수 없습니다."
-        )
+        chalk.red("네트워크 연결에 문제가 있어 빗썸 서버에 접속할 수 없습니다.")
       );
       console.error(
         chalk.yellow("인터넷 연결을 확인한 후 프로그램을 다시 시작해주세요.")
@@ -415,10 +411,7 @@ async function fetchUserHoldings(): Promise<CoinConfig[]> {
       process.exit(1);
     }
 
-    if (
-      fetchUserHoldingsErrorCount === 1 ||
-      fetchUserHoldingsErrorCount >= 3
-    ) {
+    if (fetchUserHoldingsErrorCount === 1 || fetchUserHoldingsErrorCount >= 3) {
       console.error(
         chalk.red("Error fetching user holdings from Bithumb API:"),
         error
@@ -532,6 +525,10 @@ const lastNotificationLevels: {
 
 // 콘솔을 지우고 테이블을 다시 그리는 함수
 function drawMarketView(): void {
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    connect();
+    return;
+  }
   let totalEvaluationAmount = 0;
   let totalProfitLossAmount = 0;
   let totalPurchaseAmount = 0;
@@ -599,10 +596,8 @@ function drawMarketView(): void {
       return a.localeCompare(b); // 이름순
     }
     if (sortBy === "my") {
-      const balanceA =
-        (coinAConfig?.balance || 0) + (coinAConfig?.locked || 0);
-      const balanceB =
-        (coinBConfig?.balance || 0) + (coinBConfig?.locked || 0);
+      const balanceA = (coinAConfig?.balance || 0) + (coinAConfig?.locked || 0);
+      const balanceB = (coinBConfig?.balance || 0) + (coinBConfig?.locked || 0);
       const priceA = parseFloat(dataA?.closePrice || "0");
       const priceB = parseFloat(dataB?.closePrice || "0");
       const valueA = balanceA * priceA;
@@ -738,12 +733,12 @@ function drawMarketView(): void {
         ? ((lowPriceNum - prevClosePriceNum) / prevClosePriceNum) * 100
         : 0;
 
-    const highPriceDisplay = `${ 
+    const highPriceDisplay = `${
       highPricePercent >= 0
         ? chalk.green(`+${highPricePercent.toFixed(2)}%`)
         : chalk.red(`${highPricePercent.toFixed(2)}%`)
     } (${highPriceNum.toLocaleString("ko-KR")})`;
-    const lowPriceDisplay = `${ 
+    const lowPriceDisplay = `${
       lowPricePercent >= 0
         ? chalk.green(`+${lowPricePercent.toFixed(2)}%`)
         : chalk.red(`${lowPricePercent.toFixed(2)}%`)
@@ -848,7 +843,9 @@ function drawMarketView(): void {
     if (krwBalance > 0) {
       marketSentiment += ` | 주문가능원화: ${krwBalance.toLocaleString(
         "ko-KR",
-        { maximumFractionDigits: 0 }
+        {
+          maximumFractionDigits: 0,
+        }
       )} KRW`;
     }
     if (userPoints > 0) {
@@ -865,7 +862,7 @@ function drawMarketView(): void {
   const output: string[] = [];
   output.push(
     chalk.bold(
-      "Bithumb 실시간 시세 (메뉴: /1:시세, /2:미체결, Ctrl+C:종료) - Debate300.com"
+      "Bithumb 실시간 시세 (메뉴: /1:시세, /2:미체결, /q 또는 /exit:종료) - Debate300.com"
     )
   );
   output.push(sentimentColor(marketSentiment)); // Display market sentiment
@@ -976,7 +973,9 @@ async function drawOpenOrdersView() {
       if (a.market > b.market) {
         return 1;
       }
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     });
 
     for (const order of openOrders) {
@@ -1100,8 +1099,8 @@ async function drawOpenOrdersView() {
       table.push([
         chalk.yellow(`${icon} ${displayName}`),
         orderType,
-        `${currentPriceDisplay} ${marketParts[0]}`, 
-        `${orderPriceDisplay} ${marketParts[0]}`, 
+        `${currentPriceDisplay} ${marketParts[0]}`,
+        `${orderPriceDisplay} ${marketParts[0]}`,
         discrepancyColor(discrepancyRate),
         avgPurchasePriceDisplay,
         profitLossColor(profitLossRateDisplay),
@@ -1109,7 +1108,7 @@ async function drawOpenOrdersView() {
         expectedProfitRateColor(expectedProfitAmountDisplay),
         volume,
         remaining_volume,
-        `${total} ${marketParts[0]}`, 
+        `${total} ${marketParts[0]}`,
         date,
       ]);
     }
@@ -1130,7 +1129,6 @@ async function drawOpenOrdersView() {
   process.stdout.write("\n명령어: /1(시세), /2(미체결), /exit(종료)");
   rl.prompt(true);
 }
-
 
 function sendNotification(title: string, message: string) {
   if (os.platform() === "darwin") {
@@ -1266,7 +1264,7 @@ function connect(): void {
   ws.on("close", () => {
     console.log(
       chalk.yellow(
-        `WebSocket 연결이 종료되었습니다. ${ 
+        `WebSocket 연결이 종료되었습니다. ${
           RECONNECT_INTERVAL / 1000
         }초 후 재연결을 시도합니다.`
       )
@@ -1300,13 +1298,14 @@ initializeAppConfig().then(() => {
         currentView = "open_orders";
         drawOpenOrdersView();
         break;
+      case "/q":
       case "/exit":
         process.exit(0);
         break;
       default:
         if (command.startsWith("/")) {
           process.stdout.write(
-            "알 수 없는 명령어입니다. 사용 가능한 명령어: /1, /2, /exit\n"
+            "알 수 없는 명령어입니다. 사용 가능한 명령어: /1, /2, /q, /exit\n"
           );
         }
         rl.prompt();
