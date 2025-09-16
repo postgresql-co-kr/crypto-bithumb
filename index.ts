@@ -957,16 +957,17 @@ async function drawOpenOrdersView() {
       "평균매수가",
       "현재수익률",
       "예상수익률",
+      "예상수익금",
       "주문수량",
       "미체결수량",
       "총 금액",
       "주문일시",
     ],
-    colWidths: [24, 10, 18, 18, 12, 18, 12, 12, 15, 15, 20, 25],
+    colWidths: [24, 10, 18, 18, 12, 18, 12, 12, 15, 15, 15, 20, 25],
   });
 
   if (openOrders.length === 0) {
-    table.push([{ colSpan: 12, content: "미체결 내역이 없습니다." }]);
+    table.push([{ colSpan: 13, content: "미체결 내역이 없습니다." }]);
   } else {
     openOrders.sort((a, b) => {
       if (a.market < b.market) {
@@ -1066,6 +1067,8 @@ async function drawOpenOrdersView() {
 
       let expectedProfitRateDisplay = "-";
       let expectedProfitRateColor = chalk.white;
+      let expectedProfitAmountDisplay = "-";
+
       if (
         order.side === "ask" &&
         coinConfig &&
@@ -1084,6 +1087,14 @@ async function drawOpenOrdersView() {
         } else {
           expectedProfitRateDisplay = `${expectedRate.toFixed(2)}%`;
         }
+
+        const remainingVolume = parseFloat(order.remaining_volume || "0");
+        if (remainingVolume > 0) {
+          const expectedProfit = (orderPrice - avgPrice) * remainingVolume;
+          expectedProfitAmountDisplay = expectedProfit.toLocaleString("ko-KR", {
+            maximumFractionDigits: 0,
+          });
+        }
       }
 
       table.push([
@@ -1095,6 +1106,7 @@ async function drawOpenOrdersView() {
         avgPurchasePriceDisplay,
         profitLossColor(profitLossRateDisplay),
         expectedProfitRateColor(expectedProfitRateDisplay),
+        expectedProfitRateColor(expectedProfitAmountDisplay),
         volume,
         remaining_volume,
         `${total} ${marketParts[0]}`, 
